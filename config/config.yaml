@@ -1,0 +1,42 @@
+# ==============================================================================
+# InsightBolivia — Configuración del Pipeline ETL
+# ==============================================================================
+# Este archivo es versionado en Git. NO incluir secretos aquí.
+# Los secretos van en .env (local) o GitHub Secrets (CI).
+# ==============================================================================
+
+pipeline:
+  name: "comercio_exterior"
+  description: "Pipeline ETL de Comercio Exterior del INE Bolivia"
+  schedule: "0 6 * * *"  # Cron diario a las 06:00 UTC
+
+# Configuración de la fuente de datos (INE Bolivia)
+source:
+  base_url: "https://www.ine.gob.bo"
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  timeout_seconds: 30
+  max_retries: 3
+  retry_backoff_factor: 2
+
+# Configuración de BigQuery
+bigquery:
+  dataset_staging: "staging"
+  dataset_comercio: "comercio_exterior"
+  dataset_operations: "operations"
+  location: "US"
+
+# Umbrales de calidad de datos (Great Expectations)
+data_quality:
+  max_null_percentage: 5.0
+  volume_variation_threshold: 50  # Alerta si registros varían ±50% vs promedio
+  mandatory_columns:
+    - "fecha"
+    - "codigo_nandina"
+    - "pais_iso"
+    - "tipo_operacion"
+    - "valor_fob_usd"
+
+# Límites de descarga en Streamlit
+streamlit:
+  max_download_rows: 50000
+  cache_ttl_seconds: 3600

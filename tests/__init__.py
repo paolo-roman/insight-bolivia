@@ -1,0 +1,1 @@
+"""InsightBolivia — Suite de pruebas."""
