@@ -1,0 +1,6 @@
+fecha,codigo_nandina,descripcion_nandina,pais_iso,pais_nombre,tipo_operacion,valor_fob_usd,peso_bruto_kg,peso_neto_kg,id_departamento,id_via_transporte,id_aduana
+2025-01-10,8703230000,Vehiculos para transporte,JP,Japon,IMPORTACION,45000.00,1500.0,1400.0,3,3,1
+2025-01-10,3004900000,Medicamentos terapeuticos,IN,India,IMPORTACION,120000.50,5000.0,4800.0,3,3,1
+2025-02-15,8471300000,Maquinas portatiles,CN,China,IMPORTACION,85000.00,2000.0,1800.0,3,3,2
+2025-02-15,1001190000,Trigo duro para siembra,AR,Argentina,IMPORTACION,250000.00,500000.0,498000.0,7,1,4
+2025-03-05,2710192100,Diesel oil (gasoil),US,Estados Unidos,IMPORTACION,1800000.00,3000000.0,2950000.0,7,2,3

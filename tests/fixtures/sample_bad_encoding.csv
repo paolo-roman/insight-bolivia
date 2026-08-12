@@ -1,0 +1,4 @@
+fecha,codigo_nandina,descripcion_nandina,pais_iso,pais_nombre,tipo_operacion,valor_fob_usd,peso_bruto_kg,peso_neto_kg,id_departamento,id_via_transporte,id_aduana
+2025-01-20,0901110000,Café sin tostar,US,Estados Unidos,EXPORTACION,75000.00,30000.0,28000.0,1,1,1
+2025-01-20,2301200000,Harina de crustáceos,PE,Perú,IMPORTACION,42000.50,8000.0,7500.0,3,2,2
+2025-02-28,0801220000,Nueces del Brasil,FR,Francia,EXPORTACION,95000.00,15000.0,14200.0,8,3,5

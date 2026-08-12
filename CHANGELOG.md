@@ -7,6 +7,22 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- `tests/conftest.py` — Fixtures compartidos de pytest con rutas a archivos sintéticos de prueba (TICK-EP1-002).
+- `tests/test_fixtures_and_setup.py` — Suite de pruebas (24 tests) para validar fixtures, esquema, encoding e importabilidad de módulos `src` (TICK-EP1-002).
+- `tests/generate_fixtures.py` — Script generador de datos sintéticos anonimizados para `tests/fixtures/` (TICK-EP1-002).
+- `tests/fixtures/sample_exportaciones.xlsx` — Fixture Excel con 5 registros de exportaciones con esquema completo (TICK-EP1-002).
+- `tests/fixtures/sample_importaciones.csv` — Fixture CSV UTF-8 con 5 registros de importaciones (TICK-EP1-002).
+- `tests/fixtures/sample_empty.xlsx` — Fixture Excel vacío (solo encabezados, sin filas de datos) (TICK-EP1-002).
+- `tests/fixtures/sample_bad_encoding.csv` — Fixture CSV con encoding ISO-8859-1 y caracteres acentuados (TICK-EP1-002).
+
+### Changed
+
+- Verificación de `uv run ruff check .` sin advertencias ni errores (0 lints) (TICK-EP1-002).
+- Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002).
+- Verificación de `uv run pytest --cov=src --cov-fail-under=90` operativa con cobertura 100% (TICK-EP1-002).
+
 ## [0.1.0] - 2026-08-12
 
 ### Added
