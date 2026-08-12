@@ -1,0 +1,34 @@
+# Cursor Rules for InsightBolivia Project
+
+Always follow these technical rules and standards when writing code or providing assistance in this project:
+
+1. **Python Package Manager (`uv` Only):**
+   - NEVER run `python`, `pip`, or `pip3` directly.
+   - All Python commands, dependencies, and test executions must use `uv` (e.g., `uv run pytest`, `uv run ruff check .`, `uv sync`, `uv add <package>`).
+
+2. **Code Quality & Style (Ruff):**
+   - Strictly follow PEP 8. Code must pass `uv run ruff check .` with 0 errors and 0 warnings.
+
+3. **Unit Testing & Coverage (Min 90%):**
+   - All new or modified features require unit tests in `pytest`.
+   - Minimum 90% code coverage per file is mandatory (`uv run pytest --cov=src --cov-fail-under=90`).
+
+4. **Documentation (CHANGELOG & README):**
+   - Mandatory updates to `CHANGELOG.md` following *Keep a Changelog* (`Added`, `Changed`, `Fixed`, `Removed`, `Security`).
+   - Update `README.md` if setup commands, configuration, or architecture change.
+
+5. **Security & Secrets:**
+   - ZERO hardcoded credentials or API keys. Use `.env`, `st.secrets`, and GitHub Secrets.
+   - NEVER alter test user passwords or hardcode credentials in tests.
+
+6. **Database Migrations:**
+   - All database schema changes must be versioned with numbered migration scripts in `supabase/migrations/` or `sql/ddl/`.
+
+7. **BigQuery & Streamlit Optimization:**
+   - Streamlit apps must NEVER query `fact_comercio_exterior` directly. Consume ONLY pre-aggregated views (`vw_balanza_comercial_mensual`, `vw_top_productos_exportados`, `vw_socios_comerciales`).
+   - Always filter queries by partitioning column `fecha` to control scan costs under BigQuery free tier (1TB/month).
+   - Use `@st.cache_data(ttl=3600)` on Streamlit data calls and limit CSV downloads to max 50,000 records.
+
+8. **ETL Idempotency & Resilience:**
+   - Scraper must use real browser User-Agent, exponential retries, timeouts, and SHA-256 hash checks before downloading.
+   - Loads to BigQuery must be idempotent using `MERGE` upserts.

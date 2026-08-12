@@ -1,0 +1,28 @@
+---
+description: Reglas y estándares de desarrollo obligatorios para InsightBolivia
+globs: "**/*"
+---
+# Reglas y Estándares de Desarrollo: InsightBolivia
+
+1. **Uso Exclusivo de `uv` (Backend Python):**
+   - NUNCA usar `python`, `pip` o `pip3`.
+   - Ejecutar todo via `uv` (ej: `uv run pytest`, `uv run ruff check .`, `uv sync`).
+
+2. **Calidad de Código y Linter (Ruff):**
+   - Cumplir PEP 8 y pasar `uv run ruff check .` con 0 errores/warnings.
+
+3. **Pruebas y Cobertura (Min 90%):**
+   - Escribir pruebas en `pytest` para todo cambio. Cobertura $\ge 90\%$ obligatoria (`uv run pytest --cov=src --cov-fail-under=90`).
+
+4. **Documentación:**
+   - Actualización obligatoria de `CHANGELOG.md` (*Keep a Changelog*) y `README.md`.
+
+5. **Seguridad:**
+   - CERO credenciales hardcodeadas. Usar variables de entorno (`.env`), `st.secrets` y GitHub Secrets.
+
+6. **Migraciones:**
+   - Scripts numerados en `supabase/migrations/` o `sql/ddl/`.
+
+7. **Optimizaciones BigQuery & Streamlit:**
+   - Prohibido consultar `fact_comercio_exterior` directamente desde Streamlit. Usar vistas SQL pre-agregadas.
+   - Usar decorador `@st.cache_data` y limitar descargas a máx. 50,000 registros.
