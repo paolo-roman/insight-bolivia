@@ -9,6 +9,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `firestore/indexes/firestore.indexes.json` — Definición declarativa de índices compuestos de Cloud Firestore para consultas ordenadas por tiempo en `audit_log` (`user_id + created_at`, `action + created_at`) y `ui_analytics` (`session_id + created_at`, `page + created_at`) (TICK-EP2-001).
+- `src/firestore_models.py` & `src/firestore_schemas.py` — Modelos Pydantic v2 para validación estricta de documentos NoSQL en Cloud Firestore (`UserProfile`, `CatalogView`, `DwhCatalog`, `AuditLog`, `UiAnalytics`, `UserRole`) con soporte de serialización/deserialización Firestore (`to_firestore_dict`, `from_firestore_dict`) y validadores de email, nombres y rangos (TICK-EP2-001).
+- `tests/test_firestore_schemas.py` — Suite de 36 pruebas unitarias con 100% de cobertura sobre esquemas Pydantic, restricciones RBAC, serialización y validación formal de `firestore.indexes.json` (TICK-EP2-001).
 - `firestore/` — Estructura de carpetas declarativas para Google Cloud Firestore (`firestore/rules/`, `firestore/indexes/`, `firestore/seeds/`) (TICK-ADJ-001).
 - `Docs/REGLAS_NEGOCIO_COMERCIO_EXTERIOR.md` — Documento comprensivo de reglas de negocio para comercio exterior del INE Bolivia: esquemas estrella para exportaciones e importaciones, dimensiones compartidas y únicas, reglas de formateo NANDINA (10 dígitos), valores monetarios, tipo de cambio oficial (6.96 BOB/USD) y pesos (TICK-EP1-004).
 - `notebooks/00_orquestador_eda.ipynb` — Notebook Jupyter orquestador parametrizado con Papermill para ejecutar EDAs sobre todos los archivos de comercio exterior (TICK-EP1-004).

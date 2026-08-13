@@ -210,3 +210,9 @@ class TestSourceModulesImportable:
 
     def test_import_config(self) -> None:
         import src.config  # noqa: F401
+
+    def test_import_firestore_models(self) -> None:
+        import src.firestore_models  # noqa: F401
+
+    def test_import_firestore_schemas(self) -> None:
+        import src.firestore_schemas  # noqa: F401

@@ -1,6 +1,7 @@
-"""InsightBolivia — Paquete principal del pipeline ETL y analítica."""
+"""Re-exportación de esquemas y modelos de Firestore para compatibilidad de nomenclatura."""
 
 from src.firestore_models import (
+    EMAIL_REGEX,
     AuditLog,
     CatalogView,
     DwhCatalog,
@@ -10,10 +11,8 @@ from src.firestore_models import (
     UserRole,
 )
 
-__version__ = "0.1.0"
-
 __all__ = [
-    "__version__",
+    "EMAIL_REGEX",
     "AuditLog",
     "CatalogView",
     "DwhCatalog",
