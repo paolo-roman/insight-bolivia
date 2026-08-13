@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // Funciones Auxiliares de Autenticación y Autorización (RBAC)
+    // =========================================================================
+
+    // Helper: Verifica si la solicitud proviene de un usuario autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: Obtiene el rol del usuario desde su documento en user_profiles
+    function getUserRole() {
+      return get(/databases/$(database)/documents/user_profiles/$(request.auth.uid)).data.role;
+    }
+
+    // Helper: Verifica si el usuario autenticado posee el rol 'admin'
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    // =========================================================================
+    // Reglas de Seguridad Granular por Colección
+    // =========================================================================
+
+    // 1. Perfiles de Usuario (user_profiles)
+    // Document ID = Firebase Auth UID
+    // Acceso exclusivo al propio usuario autenticado o a administradores
+    match /user_profiles/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // 2. Catálogo de Data Warehouses (dwh_catalog)
+    // Document ID = Identificador de dataset (ej: comercio_exterior)
+    // Lectura pública para consumo en Streamlit/Portal; escritura restringida a admins
+    match /dwh_catalog/{catalogId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 3. Registro de Auditoría (audit_log)
+    // Document ID = Auto-generado
+    // Lectura exclusiva para admins; inserción permitida para tracking; inmutable (no update/delete)
+    match /audit_log/{logId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    // 4. Telemetría de Interacción UI (ui_analytics)
+    // Document ID = Auto-generado
+    // Lectura exclusiva para admins; inserción pública para analítica del dashboard; inmutable
+    match /ui_analytics/{eventId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow update, delete: if false;
+    }
+  }
+}

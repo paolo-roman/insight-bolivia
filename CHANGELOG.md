@@ -9,6 +9,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `firestore/rules/firestore.rules` — Reglas de seguridad declarativas v2 para Google Cloud Firestore (Modo Nativo) con control de acceso basado en roles (RBAC: `admin`, `analyst`, `viewer`), funciones auxiliares (`isAuthenticated`, `getUserRole`, `isAdmin`), aislamiento de perfiles de usuario en `user_profiles`, lectura pública de `dwh_catalog`, e inmutabilidad estricta (`update`/`delete` deshabilitados) en colecciones append-only (`audit_log` y `ui_analytics`) (TICK-EP2-002).
+- `tests/test_firestore_rules.py` — Suite de 51 pruebas unitarias con simulación lógica exhaustiva de seguridad Firestore Rules v2, validación sintáctica de archivo, balanceo estructural, helpers RBAC, inmutabilidad y pruebas de seguridad negativas ante rutas no autorizadas (TICK-EP2-002).
 - `firestore/indexes/firestore.indexes.json` — Definición declarativa de índices compuestos de Cloud Firestore para consultas ordenadas por tiempo en `audit_log` (`user_id + created_at`, `action + created_at`) y `ui_analytics` (`session_id + created_at`, `page + created_at`) (TICK-EP2-001).
 - `src/firestore_models.py` & `src/firestore_schemas.py` — Modelos Pydantic v2 para validación estricta de documentos NoSQL en Cloud Firestore (`UserProfile`, `CatalogView`, `DwhCatalog`, `AuditLog`, `UiAnalytics`, `UserRole`) con soporte de serialización/deserialización Firestore (`to_firestore_dict`, `from_firestore_dict`) y validadores de email, nombres y rangos (TICK-EP2-001).
 - `tests/test_firestore_schemas.py` — Suite de 36 pruebas unitarias con 100% de cobertura sobre esquemas Pydantic, restricciones RBAC, serialización y validación formal de `firestore.indexes.json` (TICK-EP2-001).
