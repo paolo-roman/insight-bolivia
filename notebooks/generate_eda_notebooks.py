@@ -84,17 +84,11 @@ PROJECT_ROOT = next(
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.extract import read_ine_excel, get_excel_metadata
+from src.extract import get_excel_metadata, read_ine_excel
 from src.transform import (
-    normalize_column_names,
-    format_nandina,
-    parse_flujo,
-    cast_numeric_columns,
     clean_export_dataframe,
     compute_null_report,
-    compare_headers_across_files,
-    EXPORT_CANONICAL_COLUMNS,
-    EXPORT_NUMERIC_COLUMNS,
+    parse_flujo,
 )
 from src.validate import run_export_validations
 
@@ -139,11 +133,11 @@ df.dtypes
         _code("""nandina = df["NANDINA"]
 print(f"Tipo de dato predominante: {nandina.dtype}")
 print(f"Valores únicos: {nandina.nunique()}")
-print(f"Longitud (value_counts):")
+print("Longitud (value_counts):")
 print(nandina.str.len().value_counts().sort_index())
 print(f"\\nRegistros con cero a la izquierda: {(nandina.str[0] == '0').sum()}")
 print(f"Porcentaje: {(nandina.str[0] == '0').mean() * 100:.1f}%")
-print(f"\\nMuestras con cero a la izquierda:")
+print("\\nMuestras con cero a la izquierda:")
 print(nandina[nandina.str[0] == '0'].head(10).tolist())
 """),
 
@@ -209,9 +203,9 @@ if "DESDEP" in df.columns:
 """),
 
         _md("## 10. Resumen del Archivo"),
-        _code("""print(f"=" * 60)
+        _code("""print("=" * 60)
 print(f"RESUMEN: {filepath.name}")
-print(f"=" * 60)
+print("=" * 60)
 print(f"  Filas:              {len(df):,}")
 print(f"  Columnas:           {len(df.columns)}")
 if "GESTION" in df.columns:
@@ -283,16 +277,8 @@ PROJECT_ROOT = next(
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.extract import read_ine_excel, get_excel_metadata
-from src.transform import (
-    normalize_column_names,
-    format_nandina,
-    cast_numeric_columns,
-    clean_import_dataframe,
-    compute_null_report,
-    IMPORT_CANONICAL_COLUMNS,
-    IMPORT_NUMERIC_COLUMNS,
-)
+from src.extract import get_excel_metadata, read_ine_excel
+from src.transform import clean_import_dataframe, compute_null_report
 from src.validate import run_import_validations
 
 pd.set_option("display.max_columns", 50)
@@ -333,7 +319,7 @@ df.dtypes
         _code("""nandina = df["NANDINA"]
 print(f"Tipo de dato: {nandina.dtype}")
 print(f"Valores únicos: {nandina.nunique()}")
-print(f"Longitud (value_counts):")
+print("Longitud (value_counts):")
 print(nandina.str.len().value_counts().sort_index())
 print(f"\\nRegistros con cero a la izquierda: {(nandina.str[0] == '0').sum()}")
 print(f"Porcentaje: {(nandina.str[0] == '0').mean() * 100:.1f}%")
@@ -351,12 +337,12 @@ if "ADU" in df.columns and "FRO" in df.columns:
     mask = df["FRO"].notna() & df["ADU"].notna() & (df["FRO"] > 0)
     if mask.sum() > 0:
         ratio = df.loc[mask, "ADU"] / df.loc[mask, "FRO"]
-        print(f"Tipo de cambio ADU/FRO (CIF BOB / CIF USD):")
+        print("Tipo de cambio ADU/FRO (CIF BOB / CIF USD):")
         print(f"  Media:    {ratio.mean():.4f}")
         print(f"  Mediana:  {ratio.median():.4f}")
         print(f"  Min:      {ratio.min():.4f}")
         print(f"  Max:      {ratio.max():.4f}")
-        print(f"  Esperado: 6.96")
+        print("  Esperado: 6.96")
         outliers = ratio[(ratio < 6.86) | (ratio > 7.06)]
         print(f"  Outliers (fuera de 6.86-7.06): {len(outliers)} de {mask.sum()}")
 """),
@@ -364,7 +350,7 @@ if "ADU" in df.columns and "FRO" in df.columns:
         _md("## 6. Análisis de Peso (KILOS)"),
         _code("""if "KILOS" in df.columns:
     kilos = df["KILOS"]
-    print(f"Estadísticas de KILOS (peso bruto):")
+    print("Estadísticas de KILOS (peso bruto):")
     print(kilos.describe().round(2))
     print(f"\\nRegistros con KILOS = 0: {(kilos == 0).sum()}")
     print(f"Registros con KILOS < 0: {(kilos < 0).sum()}")
@@ -398,6 +384,7 @@ for r in results:
     print("Top 15 países origen (por número de registros):")
     print(df["DESPAI"].value_counts().head(15))
 
+
 if "DESADU" in df.columns:
     print("\\nRegistros por aduana de ingreso:")
     print(df["DESADU"].value_counts())
@@ -408,9 +395,9 @@ if "DESDEPTO" in df.columns:
 """),
 
         _md("## 10. Resumen del Archivo"),
-        _code("""print(f"=" * 60)
+        _code("""print("=" * 60)
 print(f"RESUMEN: {filepath.name}")
-print(f"=" * 60)
+print("=" * 60)
 rows_label = f"{len(df):,}" + (" (limitado)" if MAX_ROWS else "")
 print(f"  Filas:              {rows_label}")
 print(f"  Columnas:           {len(df.columns)}")
@@ -470,8 +457,8 @@ IMPORT_MAX_ROWS = 50000  # Limitar a 50k filas por defecto (archivos de ~400k fi
 
         _md("## 1. Configuración"),
         _code("""import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import papermill as pm
 
@@ -540,7 +527,7 @@ for filepath in export_files:
             kernel_name="python3",
         )
         export_results.append({"file": filepath.name, "status": "OK", "output": output_name})
-        print(f"  ✅ Completado")
+        print("  ✅ Completado")
     except Exception as e:
         export_results.append({"file": filepath.name, "status": "ERROR", "error": str(e)})
         print(f"  ❌ Error: {e}")
@@ -572,7 +559,7 @@ for filepath in import_files:
             kernel_name="python3",
         )
         import_results.append({"file": filepath.name, "status": "OK", "output": output_name})
-        print(f"  ✅ Completado")
+        print("  ✅ Completado")
     except Exception as e:
         import_results.append({"file": filepath.name, "status": "ERROR", "error": str(e)})
         print(f"  ❌ Error: {e}")

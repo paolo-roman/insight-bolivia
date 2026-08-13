@@ -33,6 +33,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002).
 - Verificación de `uv run pytest --cov=src --cov-fail-under=90` operativa con cobertura 100% (TICK-EP1-002).
 
+### Fixed
+
+- Configuración de resolución de módulos para Pyright/IDE (`[tool.pyright]` en `pyproject.toml` y `pyrightconfig.json` con `extraPaths = ["."]`) para resolver importaciones directas del paquete `src` en notebooks y módulos.
+- Corrección de imports y sintaxis de f-strings en el generador `notebooks/generate_eda_notebooks.py` y notebooks asociados.
+
 ## [0.1.0] - 2026-08-12
 
 ### Added

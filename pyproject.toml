@@ -124,3 +124,11 @@ omit = ["tests/*", "streamlit_app/*"]
 fail_under = 90
 show_missing = true
 skip_empty = true
+
+# ==============================================================================
+# Pyright Configuration
+# ==============================================================================
+[tool.pyright]
+include = ["src", "tests", "streamlit_app", "notebooks"]
+extraPaths = ["."]
+

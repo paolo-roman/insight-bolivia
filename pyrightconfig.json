@@ -1,0 +1,11 @@
+{
+  "include": [
+    "src",
+    "tests",
+    "streamlit_app",
+    "notebooks"
+  ],
+  "extraPaths": [
+    "."
+  ]
+}
