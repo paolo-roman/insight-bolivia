@@ -9,6 +9,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `firestore/` — Estructura de carpetas declarativas para Google Cloud Firestore (`firestore/rules/`, `firestore/indexes/`, `firestore/seeds/`) (TICK-ADJ-001).
 - `Docs/REGLAS_NEGOCIO_COMERCIO_EXTERIOR.md` — Documento comprensivo de reglas de negocio para comercio exterior del INE Bolivia: esquemas estrella para exportaciones e importaciones, dimensiones compartidas y únicas, reglas de formateo NANDINA (10 dígitos), valores monetarios, tipo de cambio oficial (6.96 BOB/USD) y pesos (TICK-EP1-004).
 - `notebooks/00_orquestador_eda.ipynb` — Notebook Jupyter orquestador parametrizado con Papermill para ejecutar EDAs sobre todos los archivos de comercio exterior (TICK-EP1-004).
 - `notebooks/01_eda_exportaciones.ipynb` — Notebook Jupyter parametrizado para Análisis Exploratorio de Datos (EDA) de archivos individuales de exportaciones del INE (TICK-EP1-004).
@@ -30,9 +31,18 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 
-- Verificación de `uv run ruff check .` sin advertencias ni errores (0 lints) (TICK-EP1-002).
-- Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002).
-- Verificación de `uv run pytest --cov=src --cov-fail-under=90` operativa con cobertura 100% (TICK-EP1-002).
+- `pyproject.toml` & `uv.lock` — Sustitución de dependencia `supabase>=2.7` por `google-cloud-firestore>=2.16` y `firebase-admin>=6.5` con sincronización determinista del entorno (TICK-ADJ-001).
+- `.env.example` — Eliminación de variables de Supabase y adición de variables de Cloud Firestore / GCP (`FIRESTORE_DATABASE=(default)`) (TICK-ADJ-001).
+- `streamlit_app/.streamlit/secrets.toml.example` — Plantilla de credenciales actualizada para Google Cloud Platform unificado (BigQuery y Cloud Firestore) (TICK-ADJ-001).
+- `README.md` — Actualización integral de arquitectura, prerrequisitos de Firebase/GCP y árbol de directorios del proyecto (TICK-ADJ-001).
+- `src/config.py` — Actualización de documentación de módulo para Cloud Firestore (TICK-ADJ-001).
+- Verificación de `uv run ruff check .` sin advertencias ni errores (0 lints) (TICK-EP1-002, TICK-ADJ-001).
+- Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002, TICK-ADJ-001).
+- Verificación de `uv run pytest --cov=src --cov-fail-under=90` operativa con cobertura 100% (TICK-EP1-002, TICK-ADJ-001).
+
+### Removed
+
+- `supabase/` — Eliminación de directorio de migraciones de Supabase en favor de la arquitectura documental de Firestore (TICK-ADJ-001).
 
 ### Fixed
 

@@ -29,7 +29,7 @@ Este archivo define las reglas y estándares de desarrollo obligatorios para tod
    - Ejecutar auditorías de seguridad periódicas (`uv run ruff check .`, `pip-audit` o herramientas de SAST/SCA).
 
 6. **Base de Datos y Migraciones Versionadas:**
-   - Todo cambio en esquemas de base de datos debe ser versionado mediante scripts DDL de migración numerados en `supabase/migrations/` (para Supabase/PostgreSQL) o en `sql/ddl/` (para BigQuery).
+   - Todo cambio en esquemas de base de datos o configuración NoSQL debe ser versionado mediante archivos declarativos en `firestore/` (`rules/`, `indexes/`, `seeds/`) o scripts DDL en `sql/ddl/` (para BigQuery).
 
 ---
 
@@ -45,12 +45,12 @@ Este archivo define las reglas y estándares de desarrollo obligatorios para tod
 - **Idempotencia de Carga (`load.py`):** Calcular el hash SHA-256 del archivo descargado y verificarlo en `operations.etl_control_log`. La carga a BigQuery debe usar sentencias `MERGE` (upsert) sobre la clave natural compuesta de grano completo (`fecha`, `codigo_nandina`, `pais_iso`, `tipo_operacion`, `id_departamento`, `id_via_transporte`, `id_aduana`).
 - **Calidad de Datos (`validate.py`):** Integrar **Great Expectations (GX)** para validar completitud (nulos $\le 5\%$), integridad de rangos (`valor_fob_usd` $\ge 0$) y coherencia física (`peso_bruto_kg` $\ge$ `peso_neto_kg`) antes de autorizar la ingestión final.
 
-### 2.3 Supabase (OLTP) & Mantenimiento
-- **Row Level Security (RLS):** RLS activado obligatoriamente en todas las tablas del schema `platform`.
-- **Mantenimiento Anti-Pausa:** El pipeline ETL ejecutará un ping liviano a Supabase (`UPDATE platform.dwh_catalog SET last_data_refresh = now() WHERE code = 'comercio_exterior'`) en cada corrida diaria para evitar que la capa gratuita se pause por inactividad.
+### 2.3 Cloud Firestore (OLTP) & Seguridad
+- **Reglas de Seguridad Declarativas:** Toda colección y documento en Cloud Firestore debe contar con reglas de seguridad granulares versionadas en `firestore/rules/firestore.rules`.
+- **Control de Cuotas en Capa Gratuita:** Mantener las lecturas/escrituras dentro de los límites del Always Free Tier de Firestore (50k lecturas/día, 20k escrituras/día) mediante el uso de TTLs y agregaciones en BigQuery.
 
 ### 2.4 Aplicativo Web Streamlit UI/UX
-- **Caching Decorators:** Aplicar `@st.cache_data(ttl=3600)` en todas las funciones que realicen consultas a BigQuery o Supabase.
+- **Caching Decorators:** Aplicar `@st.cache_data(ttl=3600)` en todas las funciones que realicen consultas a BigQuery o Cloud Firestore.
 - **Límite de Descargas de Seguridad:** Limitar las descargas a un máximo estricto de **50,000 registros** y exigir la selección de filtros obligatorios para evitar errores de falta de memoria (OOM) en Streamlit Cloud (límite de 1 GB RAM).
 
 ---

@@ -13,7 +13,7 @@ El proyecto inicia procesando y analizando los datos de **Comercio Exterior (Exp
 | **Orquestación** | GitHub Actions | Cron jobs diarios para pipeline ETL |
 | **ETL** | Python (Pandas, Polars, Requests, BeautifulSoup4) | Extracción, transformación y carga de datos |
 | **Data Warehouse** | Google BigQuery | Almacenamiento analítico (Star Schema) |
-| **Base Operacional** | Supabase (PostgreSQL) | Catálogo, auditoría, usuarios |
+| **Base Operacional** | Google Cloud Firestore + Firebase Auth | Catálogo, auditoría, usuarios (NoSQL) |
 | **Calidad de Datos** | Great Expectations | Validación automatizada de esquemas y datos |
 | **Visualización** | Streamlit + Plotly | Dashboard interactivo |
 | **Gestión de Paquetes** | uv | Entornos virtuales y dependencias |
@@ -27,8 +27,8 @@ El proyecto inicia procesando y analizando los datos de **Comercio Exterior (Exp
 - **Python** ≥ 3.11
 - **uv** ≥ 0.4 — [Instrucciones de instalación](https://docs.astral.sh/uv/getting-started/installation/)
 - **Git** ≥ 2.40
-- Cuenta en Google Cloud Platform (capa gratuita)
-- Cuenta en Supabase (capa gratuita)
+- Cuenta en Google Cloud Platform (capa gratuita: BigQuery, Cloud Firestore)
+- Proyecto en Firebase Console (Firebase Authentication)
 
 ---
 
@@ -68,7 +68,7 @@ Consulta `.env.example` para la lista completa de variables requeridas.
 
 ```bash
 cp streamlit_app/.streamlit/secrets.toml.example streamlit_app/.streamlit/secrets.toml
-# Editar secrets.toml con credenciales de GCP y Supabase
+# Editar secrets.toml con credenciales de GCP (BigQuery y Cloud Firestore)
 ```
 
 ---
@@ -92,8 +92,10 @@ insight-bolivia/
 ├── sql/
 │   ├── ddl/                    # Scripts DDL para BigQuery
 │   └── views/                  # Vistas SQL pre-agregadas
-├── supabase/
-│   └── migrations/             # Migraciones versionadas (PostgreSQL)
+├── firestore/
+│   ├── rules/                  # Reglas de seguridad declarativas (firestore.rules)
+│   ├── indexes/                # Índices compuestos (firestore.indexes.json)
+│   └── seeds/                  # Datos semilla del catálogo (seed_catalog.json)
 ├── tests/                      # Suite de pruebas (pytest)
 │   ├── __init__.py
 │   └── fixtures/               # Datos de prueba (XLSX, CSV, DBF)
