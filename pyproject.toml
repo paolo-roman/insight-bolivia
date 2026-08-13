@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "insight-bolivia"
 version = "0.1.0"
@@ -57,6 +61,13 @@ dev = [
 
 [project.urls]
 Repository = "https://github.com/insightbolivia/insight-bolivia"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "README.md", "LICENSE"]
+
 
 # ==============================================================================
 # Ruff Configuration

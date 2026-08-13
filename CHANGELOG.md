@@ -35,8 +35,10 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 
-- Configuración de resolución de módulos para Pyright/IDE (`[tool.pyright]` en `pyproject.toml` y `pyrightconfig.json` con `extraPaths = ["."]`) para resolver importaciones directas del paquete `src` en notebooks y módulos.
+- Configuración de build-system (`hatchling`) en `pyproject.toml` e instalación del paquete `insight-bolivia` en modo editable en el `.venv` para que `src` sea resoluble como paquete Python estándar directamente desde `site-packages` por el entorno virtual e intérprete del IDE.
+- Configuración de resolución de módulos para Pyright/VS Code (`[tool.pyright]` en `pyproject.toml`, `pyrightconfig.json` en raíz del workspace y subdirectorio, y `.vscode/settings.json`) con `extraPaths = ["insight-bolivia"]` y definición del intérprete de Python virtual.
 - Corrección de imports y sintaxis de f-strings en el generador `notebooks/generate_eda_notebooks.py` y notebooks asociados.
+
 
 ## [0.1.0] - 2026-08-12
 
