@@ -68,8 +68,19 @@ from pathlib import Path
 
 import pandas as pd
 
-# Asegurar que src/ es importable
-PROJECT_ROOT = Path.cwd()
+# Asegurar que src/ es importable resolviendo la raíz del proyecto
+current = Path.cwd().resolve()
+candidates = [
+    current,
+    current.parent,
+    current / "insight-bolivia",
+    current.parent / "insight-bolivia",
+    *current.parents,
+]
+PROJECT_ROOT = next(
+    (p for p in candidates if (p / "src" / "extract.py").exists()),
+    current,
+)
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -91,6 +102,8 @@ pd.set_option("display.max_columns", 50)
 pd.set_option("display.max_colwidth", 80)
 
 filepath = Path(FILE_PATH)
+if not filepath.is_absolute():
+    filepath = PROJECT_ROOT / filepath
 print(f"Archivo: {filepath.name}")
 print(f"Ruta completa: {filepath.resolve()}")
 """),
@@ -254,8 +267,19 @@ from pathlib import Path
 
 import pandas as pd
 
-# Asegurar que src/ es importable
-PROJECT_ROOT = Path.cwd()
+# Asegurar que src/ es importable resolviendo la raíz del proyecto
+current = Path.cwd().resolve()
+candidates = [
+    current,
+    current.parent,
+    current / "insight-bolivia",
+    current.parent / "insight-bolivia",
+    *current.parents,
+]
+PROJECT_ROOT = next(
+    (p for p in candidates if (p / "src" / "extract.py").exists()),
+    current,
+)
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -275,8 +299,11 @@ pd.set_option("display.max_columns", 50)
 pd.set_option("display.max_colwidth", 80)
 
 filepath = Path(FILE_PATH)
+if not filepath.is_absolute():
+    filepath = PROJECT_ROOT / filepath
 print(f"Archivo: {filepath.name}")
 print(f"MAX_ROWS: {MAX_ROWS if MAX_ROWS else 'Sin límite'}")
+print(f"Ruta completa: {filepath.resolve()}")
 """),
 
         _md("## 2. Metadatos del Archivo"),
@@ -448,7 +475,19 @@ from datetime import datetime
 
 import papermill as pm
 
-PROJECT_ROOT = Path.cwd()
+# Asegurar que src/ es importable resolviendo la raíz del proyecto
+current = Path.cwd().resolve()
+candidates = [
+    current,
+    current.parent,
+    current / "insight-bolivia",
+    current.parent / "insight-bolivia",
+    *current.parents,
+]
+PROJECT_ROOT = next(
+    (p for p in candidates if (p / "src" / "extract.py").exists()),
+    current,
+)
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -461,6 +500,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 EXPORT_NOTEBOOK = str(NOTEBOOKS_DIR / "01_eda_exportaciones.ipynb")
 IMPORT_NOTEBOOK = str(NOTEBOOKS_DIR / "02_eda_importaciones.ipynb")
 
+print(f"Raíz del proyecto: {PROJECT_ROOT}")
 print(f"Directorio de salida: {OUTPUT_DIR}")
 print(f"Timestamp: {datetime.now().isoformat()}")
 """),
