@@ -141,6 +141,12 @@ uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=90
 # Auditoría de seguridad de dependencias
 uv run pip-audit
 
+# Iniciar entorno Jupyter para Notebooks EDA
+uv run jupyter notebook
+
+# Ejecutar orquestador EDA con Papermill
+uv run papermill notebooks/00_orquestador_eda.ipynb notebooks/output/eda_run.ipynb
+
 # Ejecutar aplicación Streamlit (local)
 uv run streamlit run streamlit_app/app.py
 ```

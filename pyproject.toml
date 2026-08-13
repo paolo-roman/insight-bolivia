@@ -49,6 +49,10 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.5",
     "pip-audit>=2.7",
+    "papermill>=2.7.0",
+    "nbformat>=5.11.0",
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
 ]
 
 [project.urls]
@@ -85,6 +89,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "S105", "S106"]
+"notebooks/**/*.ipynb" = ["E402"]  # sys.path manipulation before local imports
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
