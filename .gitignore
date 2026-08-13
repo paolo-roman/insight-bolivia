@@ -128,6 +128,8 @@ dmypy.json
 .ipynb_checkpoints
 profile_default/
 ipython_config.py
+notebooks/output/*
+!notebooks/output/.gitkeep
 
 # ------------------------------------------------------------------------------
 # IDEs, Editores y Asistentes IA (VS Code, PyCharm, Antigravity)

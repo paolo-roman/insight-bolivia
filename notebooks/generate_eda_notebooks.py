@@ -56,9 +56,9 @@ Análisis exploratorio de **un archivo individual** de exportaciones del INE.
 Se puede ejecutar directamente o mediante el notebook orquestador con `papermill`.
 """),
 
-        # --- Celda de parámetros (papermill) ---
-        _code("""# Parámetro de entrada — ruta al archivo de exportaciones
-# Esta celda es inyectada por papermill cuando se ejecuta desde el orquestador.
+        # --- Celda de parametros (papermill) ---
+        _code("""# Parametro de entrada: ruta al archivo de exportaciones
+# Inyectado por papermill cuando se ejecuta desde el orquestador
 FILE_PATH = r"data/raw/comercio exterior/exportaciones/EXPORTACIONES 2021.xlsx"
 """, tags=["parameters"]),
 
@@ -249,10 +249,10 @@ Se puede ejecutar directamente o mediante el notebook orquestador con `papermill
 Se puede limitar la carga con el parámetro `MAX_ROWS`.
 """),
 
-        # --- Celda de parámetros ---
-        _code("""# Parámetros de entrada — inyectados por papermill
+        # --- Celda de parametros ---
+        _code("""# Parametros de entrada: inyectados por papermill
 FILE_PATH = r"data/raw/comercio exterior/importaciones/IMPORTACIONES_2021.xlsx"
-MAX_ROWS = None  # None = leer todo; usar un número para limitar (ej: 50000)
+MAX_ROWS = None  # None para leer todo o int para limitar (ej: 50000)
 """, tags=["parameters"]),
 
         _md("## 1. Configuración e Importaciones"),
@@ -450,8 +450,8 @@ uv run jupyter notebook notebooks/00_orquestador_eda.ipynb
 ```
 """),
 
-        _code("""# Parámetros del orquestador
-# MAX_ROWS para importaciones (None = leer todo; usar número para limitar)
+        _code("""# Parametros del orquestador
+# MAX_ROWS para importaciones (None para leer todo o int para limitar)
 IMPORT_MAX_ROWS = 50000  # Limitar a 50k filas por defecto (archivos de ~400k filas)
 """, tags=["parameters"]),
 
