@@ -9,6 +9,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `firestore/seeds/seed_catalog.json` — Catálogo semilla estructurado en JSON para el Data Warehouse **Comercio Exterior de Bolivia** (`comercio_exterior`) con configuración de BigQuery (`insight-bolivia`), metadatos operativos, URL de Streamlit y registro de sus 3 vistas analíticas (`vw_balanza_comercial_mensual`, `vw_top_productos_exportados`, `vw_socios_comerciales`) (TICK-EP2-003).
+- `src/seed_firestore.py` — Script ejecutable y módulo utilitario para inicialización y carga de datos semilla a la colección `dwh_catalog` en Cloud Firestore de forma idempotente (`set(..., merge=True)`), con soporte de validación Pydantic, flags CLI (`--dry-run`, `--database`, `--project`, `--file`, `--verbose`) y logging estructurado (TICK-EP2-003).
+- `tests/test_seed_firestore.py` — Suite de 24 pruebas unitarias con 100% de cobertura validando sintaxis de `seed_catalog.json`, lectura de archivos, validación Pydantic, idempotencia de ingesta, cliente Firestore, flags de CLI y manejo de excepciones (TICK-EP2-003).
 - `firestore/rules/firestore.rules` — Reglas de seguridad declarativas v2 para Google Cloud Firestore (Modo Nativo) con control de acceso basado en roles (RBAC: `admin`, `analyst`, `viewer`), funciones auxiliares (`isAuthenticated`, `getUserRole`, `isAdmin`), aislamiento de perfiles de usuario en `user_profiles`, lectura pública de `dwh_catalog`, e inmutabilidad estricta (`update`/`delete` deshabilitados) en colecciones append-only (`audit_log` y `ui_analytics`) (TICK-EP2-002).
 - `tests/test_firestore_rules.py` — Suite de 51 pruebas unitarias con simulación lógica exhaustiva de seguridad Firestore Rules v2, validación sintáctica de archivo, balanceo estructural, helpers RBAC, inmutabilidad y pruebas de seguridad negativas ante rutas no autorizadas (TICK-EP2-002).
 - `firestore/indexes/firestore.indexes.json` — Definición declarativa de índices compuestos de Cloud Firestore para consultas ordenadas por tiempo en `audit_log` (`user_id + created_at`, `action + created_at`) y `ui_analytics` (`session_id + created_at`, `page + created_at`) (TICK-EP2-001).
@@ -36,14 +39,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 
+- `src/firestore_models.py` — Adaptación del modelo `DwhCatalog` con campo `id` opcional, `last_data_refresh` nullable (`datetime | None = None`) y `bq_project` por defecto `"insight-bolivia"` para alineación completa con el archivo de catálogo semilla (TICK-EP2-003).
+- `tests/test_fixtures_and_setup.py` — Adición de prueba unitaria para verificar la importabilidad de `src.seed_firestore` (TICK-EP2-003).
 - `pyproject.toml` & `uv.lock` — Sustitución de dependencia `supabase>=2.7` por `google-cloud-firestore>=2.16` y `firebase-admin>=6.5` con sincronización determinista del entorno (TICK-ADJ-001).
 - `.env.example` — Eliminación de variables de Supabase y adición de variables de Cloud Firestore / GCP (`FIRESTORE_DATABASE=(default)`) (TICK-ADJ-001).
 - `streamlit_app/.streamlit/secrets.toml.example` — Plantilla de credenciales actualizada para Google Cloud Platform unificado (BigQuery y Cloud Firestore) (TICK-ADJ-001).
 - `README.md` — Actualización integral de arquitectura, prerrequisitos de Firebase/GCP y árbol de directorios del proyecto (TICK-ADJ-001).
 - `src/config.py` — Actualización de documentación de módulo para Cloud Firestore (TICK-ADJ-001).
-- Verificación de `uv run ruff check .` sin advertencias ni errores (0 lints) (TICK-EP1-002, TICK-ADJ-001).
-- Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002, TICK-ADJ-001).
-- Verificación de `uv run pytest --cov=src --cov-fail-under=90` operativa con cobertura 100% (TICK-EP1-002, TICK-ADJ-001).
+- Verificación de `uv run ruff check .` sin advertencias ni errores (0 lints) (TICK-EP1-002, TICK-ADJ-001, TICK-EP2-003).
+- Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002, TICK-ADJ-001, TICK-EP2-003).
+- Verificación de `uv run pytest --cov=src --cov-fail-under=90` operativa con cobertura 100% (TICK-EP1-002, TICK-ADJ-001, TICK-EP2-003).
 
 ### Removed
 

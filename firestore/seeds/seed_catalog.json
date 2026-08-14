@@ -1,0 +1,46 @@
+[
+  {
+    "id": "comercio_exterior",
+    "code": "comercio_exterior",
+    "name": "Comercio Exterior de Bolivia",
+    "description": "Datos de exportaciones e importaciones de Bolivia, procesados desde los boletines del INE. Incluye partidas arancelarias NANDINA, países de destino/origen, valores FOB/CIF y volúmenes.",
+    "bq_dataset": "comercio_exterior",
+    "bq_project": "insight-bolivia",
+    "streamlit_url": "https://insightbolivia.streamlit.app",
+    "icon": "📦",
+    "status": "active",
+    "data_source": "INE - Instituto Nacional de Estadística",
+    "update_frequency": "mensual",
+    "last_data_refresh": null,
+    "record_count": 0,
+    "views": [
+      {
+        "view_name": "vw_balanza_comercial_mensual",
+        "display_name": "Balanza Comercial Mensual",
+        "description": "Exportaciones vs. Importaciones mensuales con saldo de balanza.",
+        "bq_view_path": "comercio_exterior.vw_balanza_comercial_mensual",
+        "chart_type": "line",
+        "is_public": true,
+        "sort_order": 1
+      },
+      {
+        "view_name": "vw_top_productos_exportados",
+        "display_name": "Top 10 Productos Exportados",
+        "description": "Ranking anual de los principales productos de exportación por valor FOB.",
+        "bq_view_path": "comercio_exterior.vw_top_productos_exportados",
+        "chart_type": "bar",
+        "is_public": true,
+        "sort_order": 2
+      },
+      {
+        "view_name": "vw_socios_comerciales",
+        "display_name": "Principales Socios Comerciales",
+        "description": "Países con mayor volumen de comercio bilateral con Bolivia.",
+        "bq_view_path": "comercio_exterior.vw_socios_comerciales",
+        "chart_type": "choropleth",
+        "is_public": true,
+        "sort_order": 3
+      }
+    ]
+  }
+]

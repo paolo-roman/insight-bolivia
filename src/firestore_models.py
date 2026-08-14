@@ -128,18 +128,19 @@ class DwhCatalog(FirestoreBaseModel):
     Document ID: `code` del Data Warehouse (ej: `comercio_exterior`).
     """
 
+    id: str | None = Field(default=None, description="Document ID opcional en Cloud Firestore.")
     code: str = Field(..., min_length=1, description="Código identificador único del DWH (ej: comercio_exterior).")
     name: str = Field(..., min_length=1, description="Nombre legible del Data Warehouse.")
     description: str = Field(..., min_length=1, description="Descripción detallada del contenido del DWH.")
     bq_dataset: str = Field(..., min_length=1, description="Nombre del dataset en BigQuery.")
-    bq_project: str = Field(default="insightbolivia-dwh", description="ID del proyecto Google Cloud en BigQuery.")
+    bq_project: str = Field(default="insight-bolivia", description="ID del proyecto Google Cloud en BigQuery.")
     streamlit_url: str = Field(default="", description="URL de la aplicación interactiva en Streamlit.")
     icon: str = Field(default="📦", description="Emoji o ícono identificador del DWH.")
     status: str = Field(default="active", description="Estado operativo (active, maintenance, inactive).")
     data_source: str = Field(..., min_length=1, description="Fuente oficial de los datos (ej: INE).")
     update_frequency: str = Field(default="mensual", description="Frecuencia estimada de actualización de datos.")
-    last_data_refresh: datetime = Field(
-        default_factory=lambda: datetime.now(UTC),
+    last_data_refresh: datetime | None = Field(
+        default=None,
         description="Fecha y hora de la última ingesta exitosa de datos.",
     )
     record_count: int = Field(default=0, ge=0, description="Total de registros consolidados en el DWH.")
