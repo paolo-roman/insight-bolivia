@@ -219,3 +219,7 @@ class TestSourceModulesImportable:
 
     def test_import_seed_firestore(self) -> None:
         import src.seed_firestore  # noqa: F401
+
+    def test_import_firestore_client(self) -> None:
+        import src.firestore_client  # noqa: F401
+

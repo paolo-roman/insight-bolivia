@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -54,7 +54,8 @@ class FirestoreBaseModel(BaseModel):
         return self.model_dump(mode="python", exclude_none=exclude_none)
 
     @classmethod
-    def from_firestore_dict(cls, data: dict[str, Any]) -> FirestoreBaseModel:
+    def from_firestore_dict(cls, data: dict[str, Any]) -> Self:
+
         """Instancia el modelo desde un diccionario obtenido de un DocumentSnapshot de Firestore.
 
         Parameters

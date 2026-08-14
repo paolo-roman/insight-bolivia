@@ -9,6 +9,8 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `src/firestore_client.py` — Módulo helper cliente para Google Cloud Firestore (Modo Nativo) con autenticación flexible (ADC, `GCP_SA_KEY_PATH`, `GOOGLE_APPLICATION_CREDENTIALS` o Service Account JSON), consultas tipadas de catálogo (`get_dwh_catalog`, `list_dwh_catalogs`), actualización operacional tras ETL (`update_last_refresh`), registro inmutable de auditoría (`log_audit_event`), telemetría de interacción (`record_ui_event`), y gestión de perfiles de usuario (`get_user_profile`, `upsert_user_profile`) (TICK-EP2-004).
+- `tests/test_firestore_client.py` — Suite de 49 pruebas unitarias con 100% de cobertura validando inicialización del cliente Firestore, resolución de proyectos y bases de datos, consultas de catálogo, actualización de timestamps, registro de auditoría y telemetría, y operaciones sobre perfiles de usuario con mocks aislados (TICK-EP2-004).
 - `firestore/seeds/seed_catalog.json` — Catálogo semilla estructurado en JSON para el Data Warehouse **Comercio Exterior de Bolivia** (`comercio_exterior`) con configuración de BigQuery (`insight-bolivia`), metadatos operativos, URL de Streamlit y registro de sus 3 vistas analíticas (`vw_balanza_comercial_mensual`, `vw_top_productos_exportados`, `vw_socios_comerciales`) (TICK-EP2-003).
 - `src/seed_firestore.py` — Script ejecutable y módulo utilitario para inicialización y carga de datos semilla a la colección `dwh_catalog` en Cloud Firestore de forma idempotente (`set(..., merge=True)`), con soporte de validación Pydantic, flags CLI (`--dry-run`, `--database`, `--project`, `--file`, `--verbose`) y logging estructurado (TICK-EP2-003).
 - `tests/test_seed_firestore.py` — Suite de 24 pruebas unitarias con 100% de cobertura validando sintaxis de `seed_catalog.json`, lectura de archivos, validación Pydantic, idempotencia de ingesta, cliente Firestore, flags de CLI y manejo de excepciones (TICK-EP2-003).
@@ -39,8 +41,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 
+- `src/firestore_models.py` — Actualización del método `from_firestore_dict` con anotación de tipo `Self` para garantizar inferencia estricta de tipos en subclases Pydantic (TICK-EP2-004).
+- `tests/test_fixtures_and_setup.py` — Adición de prueba unitaria para verificar la importabilidad de `src.firestore_client` (TICK-EP2-004).
 - `src/firestore_models.py` — Adaptación del modelo `DwhCatalog` con campo `id` opcional, `last_data_refresh` nullable (`datetime | None = None`) y `bq_project` por defecto `"insight-bolivia"` para alineación completa con el archivo de catálogo semilla (TICK-EP2-003).
 - `tests/test_fixtures_and_setup.py` — Adición de prueba unitaria para verificar la importabilidad de `src.seed_firestore` (TICK-EP2-003).
+
 - `pyproject.toml` & `uv.lock` — Sustitución de dependencia `supabase>=2.7` por `google-cloud-firestore>=2.16` y `firebase-admin>=6.5` con sincronización determinista del entorno (TICK-ADJ-001).
 - `.env.example` — Eliminación de variables de Supabase y adición de variables de Cloud Firestore / GCP (`FIRESTORE_DATABASE=(default)`) (TICK-ADJ-001).
 - `streamlit_app/.streamlit/secrets.toml.example` — Plantilla de credenciales actualizada para Google Cloud Platform unificado (BigQuery y Cloud Firestore) (TICK-ADJ-001).
