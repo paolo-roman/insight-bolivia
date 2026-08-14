@@ -20,10 +20,13 @@ source:
 
 # Configuración de BigQuery
 bigquery:
+  project_id: "insight-bolivia"
+  location: "US"
   dataset_staging: "staging"
   dataset_comercio: "comercio_exterior"
+  dataset_benchmark: "benchmark_regional"
   dataset_operations: "operations"
-  location: "US"
+  staging_retention_days: 180
 
 # Umbrales de calidad de datos (Great Expectations)
 data_quality:

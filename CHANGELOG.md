@@ -9,6 +9,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `sql/ddl/00_create_datasets.sql` — Script DDL y comandos CLI (`bq mk`) para el aprovisionamiento de los 4 datasets principales en Google BigQuery (`staging`, `comercio_exterior`, `benchmark_regional`, `operations`) con retención de 180 días en `staging`, histórico indefinido en datamarts y documentación de alertas de presupuesto $0 USD en Google Cloud Billing (TICK-EP3-001).
+- `tests/test_config.py` — Suite de 19 pruebas unitarias con 100% de cobertura validando lectura de configuración YAML, validación estricta con Pydantic v2, resolución de rutas, manejo de errores y sobreescrituras por variables de entorno (TICK-EP3-001).
+- `tests/test_sql_ddl.py` — Suite de 6 pruebas unitarias validando sentencias DDL, retención de particiones/tablas de 180 días en staging, ausencia de caducidad en comercio exterior, y comandos CLI / Billing en `00_create_datasets.sql` (TICK-EP3-001).
 - `src/firestore_client.py` — Módulo helper cliente para Google Cloud Firestore (Modo Nativo) con autenticación flexible (ADC, `GCP_SA_KEY_PATH`, `GOOGLE_APPLICATION_CREDENTIALS` o Service Account JSON), consultas tipadas de catálogo (`get_dwh_catalog`, `list_dwh_catalogs`), actualización operacional tras ETL (`update_last_refresh`), registro inmutable de auditoría (`log_audit_event`), telemetría de interacción (`record_ui_event`), y gestión de perfiles de usuario (`get_user_profile`, `upsert_user_profile`) (TICK-EP2-004).
 - `tests/test_firestore_client.py` — Suite de 49 pruebas unitarias con 100% de cobertura validando inicialización del cliente Firestore, resolución de proyectos y bases de datos, consultas de catálogo, actualización de timestamps, registro de auditoría y telemetría, y operaciones sobre perfiles de usuario con mocks aislados (TICK-EP2-004).
 - `firestore/seeds/seed_catalog.json` — Catálogo semilla estructurado en JSON para el Data Warehouse **Comercio Exterior de Bolivia** (`comercio_exterior`) con configuración de BigQuery (`insight-bolivia`), metadatos operativos, URL de Streamlit y registro de sus 3 vistas analíticas (`vw_balanza_comercial_mensual`, `vw_top_productos_exportados`, `vw_socios_comerciales`) (TICK-EP2-003).
@@ -41,6 +44,9 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 
+- `config/config.yaml` — Configuración centralizada ampliada para BigQuery incluyendo `project_id: "insight-bolivia"`, `location: "US"`, `dataset_benchmark: "benchmark_regional"` y `staging_retention_days: 180` (TICK-EP3-001).
+- `src/config.py` — Implementación completa del módulo de configuración con modelos Pydantic v2 inmutables (`PipelineConfig`, `SourceConfig`, `BigQueryConfig`, `DataQualityConfig`, `StreamlitConfig`, `Settings`), funciones de resolución de rutas, parseo seguro YAML, inyección de variables de entorno y caching `@lru_cache` (TICK-EP3-001).
+- `tests/test_fixtures_and_setup.py` — Actualización del test de importación de `src.config` para validar exportaciones públicas principales (`Settings`, `get_settings`, `load_yaml_config`, `BigQueryConfig`) (TICK-EP3-001).
 - `src/firestore_models.py` — Actualización del método `from_firestore_dict` con anotación de tipo `Self` para garantizar inferencia estricta de tipos en subclases Pydantic (TICK-EP2-004).
 - `tests/test_fixtures_and_setup.py` — Adición de prueba unitaria para verificar la importabilidad de `src.firestore_client` (TICK-EP2-004).
 - `src/firestore_models.py` — Adaptación del modelo `DwhCatalog` con campo `id` opcional, `last_data_refresh` nullable (`datetime | None = None`) y `bq_project` por defecto `"insight-bolivia"` para alineación completa con el archivo de catálogo semilla (TICK-EP2-003).

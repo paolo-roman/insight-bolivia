@@ -149,6 +149,9 @@ uv run jupyter notebook
 # Ejecutar orquestador EDA con Papermill
 uv run papermill notebooks/00_orquestador_eda.ipynb notebooks/output/eda_run.ipynb
 
+# Aprovisionar datasets en BigQuery (DDL / CLI)
+# Consultar definiciones y scripts en: sql/ddl/00_create_datasets.sql
+
 # Ejecutar aplicación Streamlit (local)
 uv run streamlit run streamlit_app/app.py
 ```

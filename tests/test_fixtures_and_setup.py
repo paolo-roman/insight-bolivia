@@ -209,7 +209,12 @@ class TestSourceModulesImportable:
         import src.validate  # noqa: F401
 
     def test_import_config(self) -> None:
-        import src.config  # noqa: F401
+        import src.config
+
+        assert hasattr(src.config, "Settings")
+        assert hasattr(src.config, "get_settings")
+        assert hasattr(src.config, "load_yaml_config")
+        assert hasattr(src.config, "BigQueryConfig")
 
     def test_import_firestore_models(self) -> None:
         import src.firestore_models  # noqa: F401
