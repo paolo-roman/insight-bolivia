@@ -50,6 +50,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - `.env.example` — Eliminación de variables de Supabase y adición de variables de Cloud Firestore / GCP (`FIRESTORE_DATABASE=(default)`) (TICK-ADJ-001).
 - `streamlit_app/.streamlit/secrets.toml.example` — Plantilla de credenciales actualizada para Google Cloud Platform unificado (BigQuery y Cloud Firestore) (TICK-ADJ-001).
 - `README.md` — Actualización integral de arquitectura, prerrequisitos de Firebase/GCP y árbol de directorios del proyecto (TICK-ADJ-001).
+- `Docs/Backlog_Tickets_Desarrollo_InsightBolivia.md` — Actualización integral de trazabilidad y gobernanza del backlog: inclusión del campo `Estado` (`✅ Completado` / `⏳ Pendiente`) en los 28 tickets de desarrollo, sincronización de la tabla de resumen de épicas (9 completados, 19 pendientes) y adición de la columna de estado en la Matriz de Trazabilidad técnica (TICK-EP1-001 a TICK-EP2-004).
 - `src/config.py` — Actualización de documentación de módulo para Cloud Firestore (TICK-ADJ-001).
 - Verificación de `uv run ruff check .` sin advertencias ni errores (0 lints) (TICK-EP1-002, TICK-ADJ-001, TICK-EP2-003).
 - Verificación de `uv run pip-audit` sin vulnerabilidades conocidas (0 CVEs) (TICK-EP1-002, TICK-ADJ-001, TICK-EP2-003).
