@@ -1,0 +1,109 @@
+name: ETL - Ingestión Diaria de Comercio Exterior
+
+on:
+  schedule:
+    # Ejecución diaria automatizada a las 06:00 UTC (02:00 BOT)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Tipo de operación a procesar'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - exportaciones
+          - importaciones
+      force_reprocess:
+        description: 'Forzar reprocesamiento de archivos omitiendo verificación SHA-256'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Ejecutar en modo Dry-Run (sin escribir a BigQuery ni Firestore)'
+        required: false
+        default: false
+        type: boolean
+      date_range:
+        description: 'Rango temporal específico (ej: 2024, 2024-01:2024-12)'
+        required: false
+        default: ''
+        type: string
+      skip_extract:
+        description: 'Omitir descarga web del INE y procesar archivos locales existentes'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: etl-comercio-exterior-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run-etl:
+    name: Pipeline ETL Comercio Exterior (Extract -> Transform -> Validate -> Load)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Execute ETL Pipeline Sequence
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID || 'insight-bolivia' }}
+          BQ_PROJECT_ID: ${{ secrets.BQ_PROJECT_ID || vars.BQ_PROJECT_ID || 'insight-bolivia' }}
+          BQ_LOCATION: ${{ vars.BQ_LOCATION || 'US' }}
+          FIRESTORE_DATABASE: ${{ vars.FIRESTORE_DATABASE || '(default)' }}
+          LOG_LEVEL: INFO
+          LOG_FORMAT: json
+        run: |
+          ARGS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ inputs.operation }}" ]; then
+              ARGS="$ARGS --operation ${{ inputs.operation }}"
+            fi
+            if [ "${{ inputs.force_reprocess }}" = "true" ]; then
+              ARGS="$ARGS --force-reprocess"
+            fi
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              ARGS="$ARGS --dry-run"
+            fi
+            if [ -n "${{ inputs.date_range }}" ]; then
+              ARGS="$ARGS --date-range ${{ inputs.date_range }}"
+            fi
+            if [ "${{ inputs.skip_extract }}" = "true" ]; then
+              ARGS="$ARGS --skip-extract"
+            fi
+          fi
+          echo "Ejecutando orquestador ETL: uv run python -m src.main $ARGS"
+          uv run python -m src.main $ARGS
+
+      - name: Upload ETL Diagnostics & Quality Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: etl-diagnostics-${{ github.run_id }}
+          path: |
+            gx/uncommitted/data_docs/
+            *.log
+          retention-days: 14
+          if-no-files-found: ignore
