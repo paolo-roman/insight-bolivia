@@ -1,4 +1,4 @@
-"""Pruebas unitarias para los scripts DDL de BigQuery.
+"""Pruebas unitarias para los scripts DDL y Vistas SQL de BigQuery.
 
 Valida:
 - Existencia y lectura de sql/ddl/00_create_datasets.sql.
@@ -15,6 +15,12 @@ Valida:
   7. create_dim_aduana.sql
   8. create_dim_moneda.sql
   9. create_fact_comercio_exterior.sql
+- Existencia, sintaxis y estructura de DDLs operacionales y Vistas analíticas SQL (TICK-EP3-003):
+  10. create_etl_control_log.sql
+  11. create_ui_analytics_aggregated.sql
+  12. vw_balanza_comercial_mensual.sql
+  13. vw_top_productos_exportados.sql
+  14. vw_socios_comerciales.sql
 """
 
 from __future__ import annotations
@@ -35,6 +41,19 @@ def get_ddl_file(filename: str) -> Path:
         if p.exists():
             return p.resolve()
     raise FileNotFoundError(f"No se encontró sql/ddl/{filename}")
+
+
+def get_view_file(filename: str) -> Path:
+    """Helper para resolver la ruta absoluta de un archivo SQL de Vista."""
+    candidates = [
+        Path.cwd() / "sql" / "views" / filename,
+        Path.cwd() / "insight-bolivia" / "sql" / "views" / filename,
+        Path(__file__).resolve().parent.parent / "sql" / "views" / filename,
+    ]
+    for p in candidates:
+        if p.exists():
+            return p.resolve()
+    raise FileNotFoundError(f"No se encontró sql/views/{filename}")
 
 
 class TestCreateDatasetsDDL:
@@ -359,3 +378,193 @@ class TestFactComercioExteriorDDL:
         ]
         for element in expected_elements:
             assert element in content, f"Elemento '{element}' no encontrado en fact_comercio_exterior."
+
+
+class TestOperationsDDLFilesExist:
+    """Verifica la existencia y tamaño de los scripts DDL del dataset operations."""
+
+    OPERATIONS_FILES = [
+        "create_etl_control_log.sql",
+        "create_ui_analytics_aggregated.sql",
+    ]
+
+    @pytest.mark.parametrize("filename", OPERATIONS_FILES)
+    def test_ddl_file_exists_and_is_not_empty(self, filename: str) -> None:
+        path = get_ddl_file(filename)
+        assert path.exists(), f"El archivo {filename} no existe."
+        assert path.is_file(), f"{filename} no es un archivo regular."
+        assert path.stat().st_size > 200, f"{filename} es demasiado pequeño o está vacío."
+
+
+class TestEtlControlLogDDL:
+    """Verifica la definición de operations.etl_control_log para trazabilidad e idempotencia."""
+
+    @pytest.fixture
+    def content(self) -> str:
+        return get_ddl_file("create_etl_control_log.sql").read_text(encoding="utf-8")
+
+    def test_table_declaration(self, content: str) -> None:
+        expected = "CREATE TABLE IF NOT EXISTS `insight-bolivia.operations.etl_control_log`"
+        assert expected in content
+
+    def test_partitioning_and_clustering(self, content: str) -> None:
+        assert "PARTITION BY DATE(timestamp_ejecucion)" in content
+        assert "CLUSTER BY estado, nombre_archivo" in content
+
+    def test_columns(self, content: str) -> None:
+        expected_columns = [
+            "id STRING NOT NULL",
+            "nombre_archivo STRING NOT NULL",
+            "hash_sha256 STRING NOT NULL",
+            "fecha_publicacion DATE",
+            "registros_procesados INT64",
+            "timestamp_ejecucion TIMESTAMP NOT NULL",
+            "estado STRING NOT NULL",
+            "detalles_error STRING",
+        ]
+        for col in expected_columns:
+            assert col in content, f"Columna '{col}' no encontrada en etl_control_log."
+
+
+class TestUiAnalyticsAggregatedDDL:
+    """Verifica la definición de operations.ui_analytics_aggregated para telemetría agregada."""
+
+    @pytest.fixture
+    def content(self) -> str:
+        return get_ddl_file("create_ui_analytics_aggregated.sql").read_text(encoding="utf-8")
+
+    def test_table_declaration(self, content: str) -> None:
+        expected = "CREATE TABLE IF NOT EXISTS `insight-bolivia.operations.ui_analytics_aggregated`"
+        assert expected in content
+
+    def test_partitioning_and_clustering(self, content: str) -> None:
+        assert "PARTITION BY DATE_TRUNC(fecha_mes, MONTH)" in content
+        assert "CLUSTER BY page, event_type" in content
+
+    def test_columns(self, content: str) -> None:
+        expected_columns = [
+            "fecha_mes DATE NOT NULL",
+            "anio INT64 NOT NULL",
+            "mes INT64 NOT NULL",
+            "page STRING NOT NULL",
+            "event_type STRING NOT NULL",
+            "total_eventos INT64 NOT NULL",
+            "total_sesiones_unicas INT64",
+            "total_usuarios_unicos INT64",
+            "duracion_promedio_ms NUMERIC",
+            "duracion_maxima_ms INT64",
+            "duracion_minima_ms INT64",
+            "fecha_exportacion TIMESTAMP NOT NULL",
+        ]
+        for col in expected_columns:
+            assert col in content, f"Columna '{col}' no encontrada en ui_analytics_aggregated."
+
+
+class TestSQLViewsExist:
+    """Verifica la existencia y tamaño de los 3 archivos de vistas analíticas SQL."""
+
+    VIEW_FILES = [
+        "vw_balanza_comercial_mensual.sql",
+        "vw_top_productos_exportados.sql",
+        "vw_socios_comerciales.sql",
+    ]
+
+    @pytest.mark.parametrize("filename", VIEW_FILES)
+    def test_view_file_exists_and_is_not_empty(self, filename: str) -> None:
+        path = get_view_file(filename)
+        assert path.exists(), f"La vista SQL {filename} no existe."
+        assert path.is_file(), f"{filename} no es un archivo regular."
+        assert path.stat().st_size > 200, f"{filename} es demasiado pequeño o está vacío."
+
+
+class TestVwBalanzaComercialMensual:
+    """Verifica la vista analítica vw_balanza_comercial_mensual."""
+
+    @pytest.fixture
+    def content(self) -> str:
+        return get_view_file("vw_balanza_comercial_mensual.sql").read_text(encoding="utf-8")
+
+    def test_view_declaration(self, content: str) -> None:
+        expected = "CREATE OR REPLACE VIEW `insight-bolivia.comercio_exterior.vw_balanza_comercial_mensual`"
+        assert expected in content
+
+    def test_joins_dim_tiempo_on_fecha(self, content: str) -> None:
+        assert "JOIN `insight-bolivia.comercio_exterior.dim_tiempo` t ON f.fecha = t.fecha" in content
+
+    def test_computes_trade_balance(self, content: str) -> None:
+        assert "total_exportaciones_usd" in content
+        assert "total_importaciones_usd" in content
+        assert "saldo_balanza_usd" in content
+
+    def test_group_by_time_hierarchy(self, content: str) -> None:
+        assert "GROUP BY" in content
+        assert "t.anio" in content
+        assert "t.mes" in content
+
+
+class TestVwTopProductosExportados:
+    """Verifica la vista analítica vw_top_productos_exportados con SCD Tipo 2 y QUALIFY."""
+
+    @pytest.fixture
+    def content(self) -> str:
+        return get_view_file("vw_top_productos_exportados.sql").read_text(encoding="utf-8")
+
+    def test_view_declaration(self, content: str) -> None:
+        expected = "CREATE OR REPLACE VIEW `insight-bolivia.comercio_exterior.vw_top_productos_exportados`"
+        assert expected in content
+
+    def test_joins_dim_producto_and_filters_current_version(self, content: str) -> None:
+        expected_join = (
+            "JOIN `insight-bolivia.comercio_exterior.dim_producto` p "
+            "ON f.codigo_nandina = p.codigo_nandina"
+        )
+        assert expected_join in content
+        assert "p.es_vigente = TRUE" in content
+
+    def test_filters_exportaciones(self, content: str) -> None:
+        assert "f.tipo_operacion = 'EXPORTACION'" in content
+
+    def test_qualify_window_function(self, content: str) -> None:
+        assert "QUALIFY ROW_NUMBER() OVER (PARTITION BY t.anio ORDER BY SUM(f.valor_fob_usd) DESC) <= 10" in content
+
+    def test_contains_product_attributes(self, content: str) -> None:
+        expected_cols = [
+            "p.codigo_nandina",
+            "p.descripcion_producto",
+            "p.sector_economico",
+            "total_fob_usd",
+            "total_peso_neto_kg",
+        ]
+        for col in expected_cols:
+            assert col in content, f"Columna '{col}' no encontrada en vw_top_productos_exportados."
+
+
+class TestVwSociosComerciales:
+    """Verifica la vista analítica vw_socios_comerciales."""
+
+    @pytest.fixture
+    def content(self) -> str:
+        return get_view_file("vw_socios_comerciales.sql").read_text(encoding="utf-8")
+
+    def test_view_declaration(self, content: str) -> None:
+        expected = "CREATE OR REPLACE VIEW `insight-bolivia.comercio_exterior.vw_socios_comerciales`"
+        assert expected in content
+
+    def test_joins_dim_pais(self, content: str) -> None:
+        assert "JOIN `insight-bolivia.comercio_exterior.dim_pais` pa ON f.pais_iso = pa.pais_iso" in content
+
+    def test_aggregates_geographical_and_trade_bloc_metrics(self, content: str) -> None:
+        expected_cols = [
+            "pa.pais_iso",
+            "pa.nombre_pais_es",
+            "pa.continente",
+            "pa.bloque_comercial",
+            "total_valor_usd",
+            "total_fob_usd",
+            "total_cif_usd",
+            "total_peso_bruto_kg",
+            "num_transacciones",
+        ]
+        for col in expected_cols:
+            assert col in content, f"Columna '{col}' no encontrada en vw_socios_comerciales."
+
