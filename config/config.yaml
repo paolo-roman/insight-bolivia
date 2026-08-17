@@ -43,3 +43,10 @@ data_quality:
 streamlit:
   max_download_rows: 50000
   cache_ttl_seconds: 3600
+
+# Configuración de Observabilidad y Logs
+logging:
+  level: "INFO"
+  format: "json"
+  retention_days: 90
+
