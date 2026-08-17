@@ -9,6 +9,11 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `src/extract_comercio_exterior.py` — Módulo dedicado de extracción y web scraping resiliente para portales de Exportaciones e Importaciones del INE Bolivia (`scrape_ine_resources`), cliente HTTP con reintentos exponenciales y User-Agent real (`create_resilient_session`), cálculo de hash criptográfico SHA-256 en streaming (`compute_sha256`), descarga con streaming e idempotencia (`download_resource`), y orquestador general de ingesta de nuevas bases de datos (`extract_comercio_exterior`) (TICK-EP4-001).
+- `src/extract.py` — Refactorización a módulo base enfocado en lectura de archivos locales (`read_ine_excel`, `get_excel_metadata`, `list_raw_files`) con re-exportación de símbolos de comercio exterior para 100% de compatibilidad hacia atrás (TICK-EP4-001).
+- `tests/test_extract_comercio_exterior.py` — Suite de 23 pruebas unitarias con 100% de cobertura sobre el módulo de scraping, descarga e idempotencia de comercio exterior (TICK-EP4-001).
+- `tests/test_extract.py` — Suite de 17 pruebas unitarias con 100% de cobertura sobre funciones de lectura y metadatos de archivos locales (TICK-EP4-001).
+
 - `sql/ddl/create_etl_control_log.sql` — Script DDL para la tabla operacional `insight-bolivia.operations.etl_control_log` con particionamiento diario `DATE(timestamp_ejecucion)`, clustering compuesto `(estado, nombre_archivo)` y almacenamiento de hashes SHA-256 para auditoría e idempotencia (TICK-EP3-003).
 - `sql/ddl/create_ui_analytics_aggregated.sql` — Script DDL para la tabla de retención histórica `insight-bolivia.operations.ui_analytics_aggregated` con particionamiento mensual `DATE_TRUNC(fecha_mes, MONTH)` y clustering `(page, event_type)` para agregados de telemetría exportados desde Cloud Firestore (TICK-EP3-003).
 - `sql/views/vw_balanza_comercial_mensual.sql` — Vista SQL analítica pre-agregada en BigQuery calculando exportaciones FOB, importaciones CIF, saldo comercial mensual, volúmenes de peso y conteo de operaciones (TICK-EP3-003).

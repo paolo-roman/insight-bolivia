@@ -1,15 +1,32 @@
-"""Módulo de extracción de datos de fuentes gubernamentales (INE Bolivia).
+"""Módulo base de extracción y lectura de datos del INE Bolivia.
 
-Proporciona funciones para leer archivos Excel (.xlsx) de comercio exterior
-descargados del portal del INE. Soporta lectura en modo read-only para
+Proporciona funciones para leer archivos Excel (.xlsx) y CSV de comercio exterior
+descargados del portal del INE, con soporte para lectura en modo read-only para
 archivos grandes, detección de encoding y extracción de metadatos.
+
+Para las operaciones de web scraping y descarga automatizada, véase
+el módulo especializado ``src.extract_comercio_exterior``.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
+
+from src.extract_comercio_exterior import (
+    INE_EXPORTACIONES_URL,
+    INE_IMPORTACIONES_URL,
+    ExtractionMetadata,
+    ExtractionSummary,
+    ScrapedResource,
+    compute_sha256,
+    create_resilient_session,
+    download_resource,
+    extract_comercio_exterior,
+    scrape_ine_resources,
+)
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -17,6 +34,9 @@ import pandas as pd
 _SUPPORTED_EXTENSIONS = {".xlsx", ".xls", ".csv"}
 
 
+# ---------------------------------------------------------------------------
+# Funciones de Lectura y Metadatos de Archivos Locales
+# ---------------------------------------------------------------------------
 def read_ine_excel(
     filepath: str | Path,
     *,
@@ -95,7 +115,7 @@ def _read_csv_with_encoding(
     return pd.read_csv(filepath, encoding=detected, nrows=max_rows, dtype=str)
 
 
-def get_excel_metadata(filepath: str | Path) -> dict:
+def get_excel_metadata(filepath: str | Path) -> dict[str, Any]:
     """Extrae metadatos de un archivo Excel del INE sin cargar todos los datos.
 
     Parameters
@@ -118,6 +138,11 @@ def get_excel_metadata(filepath: str | Path) -> dict:
 
     wb = openpyxl.load_workbook(path, read_only=True)
     ws = wb.active
+    if ws is None:
+        wb.close()
+        msg = f"El libro Excel '{path}' no tiene una hoja activa válida."
+        raise ValueError(msg)
+
     headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
     sheet_names = wb.sheetnames
     wb.close()
@@ -164,3 +189,21 @@ def list_raw_files(
         for f in path.glob(f"*{extension}")
         if exclude_pattern.upper() not in f.name.upper()
     )
+
+
+__all__ = [
+    "INE_EXPORTACIONES_URL",
+    "INE_IMPORTACIONES_URL",
+    "ExtractionMetadata",
+    "ExtractionSummary",
+    "ScrapedResource",
+    "_read_csv_with_encoding",
+    "compute_sha256",
+    "create_resilient_session",
+    "download_resource",
+    "extract_comercio_exterior",
+    "get_excel_metadata",
+    "list_raw_files",
+    "read_ine_excel",
+    "scrape_ine_resources",
+]
