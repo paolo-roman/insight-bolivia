@@ -28,6 +28,12 @@ from src.firestore_client import get_firestore_client, log_audit_event, update_l
 if TYPE_CHECKING:
     from google.cloud import firestore
 
+    from src.load_comercio_exterior import (
+        load_comercio_exterior,
+        merge_into_fact_comercio_exterior,
+        sync_dim_producto_scd2,
+    )
+
 logger = logging.getLogger("insight_bolivia.load")
 
 
@@ -225,12 +231,14 @@ def sync_firestore_metadata(
     return updated
 
 
-# Re-exportación de funciones de comercio exterior para compatibilidad hacia atrás
-from src.load_comercio_exterior import (  # noqa: E402
-    load_comercio_exterior,
-    merge_into_fact_comercio_exterior,
-    sync_dim_producto_scd2,
-)
+def __getattr__(name: str) -> Any:
+    """Re-exportación dinámica de funciones de comercio exterior para compatibilidad hacia atrás."""
+    if name in {"load_comercio_exterior", "merge_into_fact_comercio_exterior", "sync_dim_producto_scd2"}:
+        import src.load_comercio_exterior as _lce
+
+        return getattr(_lce, name)
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 __all__ = [
     "LoadError",

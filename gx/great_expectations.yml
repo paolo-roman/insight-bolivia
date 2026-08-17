@@ -215,6 +215,90 @@ fluent_datasources:
           batch_def:
             id: c56f9258-6166-4081-bb68-338e87fcae78
             partitioner:
+  pandas_runtime_9342:
+    type: pandas
+    id: 2cc5d49d-e8b6-4f84-803c-817d52cb54df
+    assets:
+      df_asset:
+        type: dataframe
+        id: 440f20fb-b92e-41d9-9653-7b01658d766a
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 7cfaae51-518f-4670-b516-736756455e84
+            partitioner:
+  pandas_runtime_5793:
+    type: pandas
+    id: 155ed481-48eb-42ba-a4f5-4acc82cb492c
+    assets:
+      df_asset:
+        type: dataframe
+        id: bd204da3-92ce-481b-bc05-6e77a97a7793
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: c3560a4f-9622-44f4-b661-aedf501b650e
+            partitioner:
+  pandas_runtime_5283:
+    type: pandas
+    id: eb72df8a-2446-4faf-b168-1e517b608d58
+    assets:
+      df_asset:
+        type: dataframe
+        id: 0247ddce-b640-4e73-8136-394d74222bac
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: fff269e9-57fc-46d5-88ee-8c4be95adac5
+            partitioner:
+  pandas_runtime_2605:
+    type: pandas
+    id: a1c53832-dcc8-4607-ad68-8c26bbdf7f68
+    assets:
+      df_asset:
+        type: dataframe
+        id: d55c8397-d3b0-4488-b8e0-2c4161b7b48e
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: e337c3ec-0eba-4ed4-9bb9-e44af194d1a4
+            partitioner:
+  pandas_runtime_7249:
+    type: pandas
+    id: 225f857f-a80f-45f0-8ae5-b18178cd83fe
+    assets:
+      df_asset:
+        type: dataframe
+        id: d663aa7c-6b43-4e90-a834-e42a014fdc0e
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 41557627-ba6a-40f7-8b3c-febacd874513
+            partitioner:
+  pandas_runtime_9548:
+    type: pandas
+    id: ae965ecd-53ea-40ab-a0cc-a0401c86af11
+    assets:
+      df_asset:
+        type: dataframe
+        id: aca16586-44b2-49cc-aaab-d749702222ed
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 0df7cbd5-4b11-47d3-823f-452607d295be
+            partitioner:
+  pandas_runtime_5429:
+    type: pandas
+    id: f1cadeb6-6aa1-4b0f-aa7d-d967cbb83209
+    assets:
+      df_asset:
+        type: dataframe
+        id: 3772936a-fd74-4161-9041-62e3a37cd289
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 0b9b5494-3b48-44d7-adcf-bf9ed6e968b5
+            partitioner:
 plugins_directory:
 config_variables_file_path:
 analytics_enabled:

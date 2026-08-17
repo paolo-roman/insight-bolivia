@@ -152,6 +152,15 @@ uv run papermill notebooks/00_orquestador_eda.ipynb notebooks/output/eda_run.ipy
 # Aprovisionar datasets en BigQuery (DDL / CLI)
 # Consultar definiciones y scripts en: sql/ddl/00_create_datasets.sql
 
+# Ejecutar pipeline ETL completo (Extracción, Transformación, Validación y Carga)
+uv run python -m src.main
+
+# Ejecutar pipeline ETL en modo simulación (dry-run)
+uv run python -m src.main --dry-run
+
+# Ejecutar pipeline ETL forzando reprocesamiento con filtro de gestión
+uv run python -m src.main --force-reprocess --date-range "2024"
+
 # Ejecutar aplicación Streamlit (local)
 uv run streamlit run streamlit_app/app.py
 ```
