@@ -26,3 +26,6 @@ globs: "**/*"
 7. **Optimizaciones BigQuery & Streamlit:**
    - Prohibido consultar `fact_comercio_exterior` directamente desde Streamlit. Usar vistas SQL pre-agregadas.
    - Usar decorador `@st.cache_data` y limitar descargas a máx. 50,000 registros.
+
+8. **Límite de 500 Líneas por Script/Archivo:**
+   - Ningún script o módulo de código debe superar las 500 líneas para asegurar legibilidad, mantenibilidad y modularidad.

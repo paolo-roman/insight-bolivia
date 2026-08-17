@@ -32,3 +32,6 @@ Always follow these technical rules and standards when writing code or providing
 8. **ETL Idempotency & Resilience:**
    - Scraper must use real browser User-Agent, exponential retries, timeouts, and SHA-256 hash checks before downloading.
    - Loads to BigQuery must be idempotent using `MERGE` upserts.
+
+9. **File & Script Length Limit (Max 500 Lines):**
+   - Scripts, modules, and source files must NOT exceed 500 lines of code to maintain high readability, maintainability, and clean modular architecture.

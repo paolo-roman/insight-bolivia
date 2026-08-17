@@ -49,20 +49,14 @@ _YEAR_PATTERN = re.compile(r"(19\d{2}|20\d{2})")
 # ---------------------------------------------------------------------------
 @dataclass
 class ScrapedResource:
-    """Representa un recurso de datos identificado en el portal del INE.
+    """Recurso de datos identificado en el portal del INE.
 
-    Attributes
-    ----------
-    title:
-        Título o texto descriptivo del enlace en la página.
-    url:
-        URL absoluta de descarga del archivo.
-    operation_type:
-        Tipo de operación de comercio exterior ('exportaciones' o 'importaciones').
-    is_dictionary:
-        Indica si el recurso corresponde a un diccionario de variables.
-    year:
-        Año / gestión estimada del archivo (si se detecta).
+    Attributes:
+        title: Título o texto descriptivo del enlace en la página.
+        url: URL absoluta de descarga del archivo.
+        operation_type: Tipo de operación ('exportaciones' o 'importaciones').
+        is_dictionary: Indica si el recurso corresponde a un diccionario de variables.
+        year: Año / gestión estimada del archivo (si se detecta).
     """
 
     title: str
@@ -76,24 +70,15 @@ class ScrapedResource:
 class ExtractionMetadata:
     """Metadatos resultantes de la extracción y descarga de un recurso.
 
-    Attributes
-    ----------
-    resource:
-        Recurso scrapeado de origen.
-    file_path:
-        Ruta local final del archivo descargado (None si no se descargó).
-    filename:
-        Nombre de archivo asignado o recibido.
-    hash_sha256:
-        Hash SHA-256 del contenido del archivo.
-    file_size_bytes:
-        Tamaño del archivo en bytes.
-    status:
-        Estado del proceso ('DOWNLOADED', 'SKIPPED_EXISTING', 'FAILED').
-    error_message:
-        Mensaje descriptivo en caso de error.
-    downloaded_at:
-        Marca temporal ISO 8601 en UTC del momento de la descarga.
+    Attributes:
+        resource: Recurso scrapeado de origen.
+        file_path: Ruta local final del archivo descargado (None si no se descargó).
+        filename: Nombre de archivo asignado o recibido.
+        hash_sha256: Hash SHA-256 del contenido del archivo.
+        file_size_bytes: Tamaño del archivo en bytes.
+        status: Estado del proceso ('DOWNLOADED', 'SKIPPED_EXISTING', 'FAILED').
+        error_message: Mensaje descriptivo en caso de error.
+        downloaded_at: Marca temporal ISO 8601 en UTC del momento de la descarga.
     """
 
     resource: ScrapedResource
@@ -110,16 +95,11 @@ class ExtractionMetadata:
 class ExtractionSummary:
     """Resumen consolidado de una sesión de extracción ETL.
 
-    Attributes
-    ----------
-    total_scraped:
-        Cantidad total de recursos detectados en el scraping.
-    downloaded:
-        Lista de recursos descargados exitosamente.
-    skipped:
-        Lista de recursos omitidos por ya existir previamente (idempotencia).
-    failed:
-        Lista de recursos cuya descarga o procesamiento falló.
+    Attributes:
+        total_scraped: Cantidad total de recursos detectados en el scraping.
+        downloaded: Lista de recursos descargados exitosamente.
+        skipped: Lista de recursos omitidos por ya existir previamente (idempotencia).
+        failed: Lista de recursos cuya descarga o procesamiento falló.
     """
 
     total_scraped: int = 0
@@ -330,29 +310,7 @@ def download_resource(
     timeout: int = 30,
     chunk_size: int = 65536,
 ) -> ExtractionMetadata:
-    """Descarga un recurso del portal del INE con verificación de idempotencia vía SHA-256.
-
-    Parameters
-    ----------
-    resource:
-        Recurso de datos a descargar.
-    output_dir:
-        Directorio local de destino.
-    known_hashes:
-        Conjunto de hashes SHA-256 previamente procesados. Si el archivo descargado
-        coincide con uno de ellos, se descarta y marca como ``SKIPPED_EXISTING``.
-    session:
-        Sesión HTTP a utilizar. Si es None, se crea una sesión resiliente.
-    timeout:
-        Timeout de conexión y lectura en segundos.
-    chunk_size:
-        Tamaño de bloque en bytes para descarga en streaming y hashing en memoria.
-
-    Returns
-    -------
-    ExtractionMetadata
-        Resultado de la extracción con estado, hash y ruta final.
-    """
+    """Descarga un recurso del portal del INE con verificación de idempotencia vía SHA-256."""
     dest_dir = Path(output_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -451,30 +409,7 @@ def extract_comercio_exterior(
     session: requests.Session | None = None,
     timeout: int = 30,
 ) -> ExtractionSummary:
-    """Orquesta la extracción completa de nuevas bases de datos de Comercio Exterior del INE.
-
-    Parameters
-    ----------
-    sources:
-        Diccionario mapeando tipo de operación a URL (ej. `{'exportaciones': url1, 'importaciones': url2}`).
-        Por defecto utiliza `INE_EXPORTACIONES_URL` e `INE_IMPORTACIONES_URL`.
-    output_base_dir:
-        Directorio base de salida. Por defecto `data/raw/comercio exterior`.
-    known_hashes:
-        Colección de hashes SHA-256 previamente ingeridos para evitar duplicados.
-        Si es None, se descubren automáticamente los hashes de archivos existentes en disco.
-    exclude_dictionaries:
-        Si es True, ignora diccionarios de variables.
-    session:
-        Sesión HTTP a reutilizar.
-    timeout:
-        Timeout en segundos para las peticiones.
-
-    Returns
-    -------
-    ExtractionSummary
-        Resumen con todos los archivos descargados, omitidos y fallidos.
-    """
+    """Orquesta la extracción completa de nuevas bases de datos de Comercio Exterior del INE."""
     resolved_sources = sources or {
         "exportaciones": INE_EXPORTACIONES_URL,
         "importaciones": INE_IMPORTACIONES_URL,

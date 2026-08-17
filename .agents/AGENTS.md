@@ -31,6 +31,11 @@ Este archivo define las reglas y estándares de desarrollo obligatorios para tod
 6. **Base de Datos y Migraciones Versionadas:**
    - Todo cambio en esquemas de base de datos o configuración NoSQL debe ser versionado mediante archivos declarativos en `firestore/` (`rules/`, `indexes/`, `seeds/`) o scripts DDL en `sql/ddl/` (para BigQuery).
 
+7. **Límite de Longitud de Archivos y Scripts (Máximo 500 Líneas):**
+   - Ningún archivo, módulo o script de código debe sobrepasar las **500 líneas de código**.
+   - Se debe preservar una alta legibilidad, modularidad y principio de responsabilidad única.
+   - Si un archivo se acerca o supera las 500 líneas, debe ser refactorizado y modularizado en componentes o submódulos más pequeños y especializados.
+
 ---
 
 ## 2. Estándares de Arquitectura e Ingeniería de Datos
@@ -68,6 +73,7 @@ Este archivo define las reglas y estándares de desarrollo obligatorios para tod
 
 - [ ] ¿Se ejecutaron las pruebas con `uv run pytest` y la cobertura es $\ge 90\%$ en archivos nuevos/modificados?
 - [ ] ¿El linter no muestra errores ni advertencias (`uv run ruff check .`)?
+- [ ] ¿Ningún archivo o script nuevo/modificado sobrepasa el límite de 500 líneas de código?
 - [ ] ¿Se registró el cambio en `CHANGELOG.md` siguiendo *Keep a Changelog*?
 - [ ] ¿Se actualizó `README.md` si hubo cambios en comandos, arquitectura o secretos?
 - [ ] ¿Se crearon los scripts DDL de migración si se modificó el esquema de base de datos?

@@ -9,6 +9,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `AGENTS.md`, `.cursorrules`, `.cursor/rules/insight-bolivia-rules.mdc` — Regla técnica obligatoria de desarrollo que establece un límite estricto de máximo 500 líneas de código por script o módulo para garantizar legibilidad, modularidad y mantenibilidad del proyecto.
 - `src/extract_comercio_exterior.py` — Módulo dedicado de extracción y web scraping resiliente para portales de Exportaciones e Importaciones del INE Bolivia (`scrape_ine_resources`), cliente HTTP con reintentos exponenciales y User-Agent real (`create_resilient_session`), cálculo de hash criptográfico SHA-256 en streaming (`compute_sha256`), descarga con streaming e idempotencia (`download_resource`), y orquestador general de ingesta de nuevas bases de datos (`extract_comercio_exterior`) (TICK-EP4-001).
 - `src/extract.py` — Refactorización a módulo base enfocado en lectura de archivos locales (`read_ine_excel`, `get_excel_metadata`, `list_raw_files`) con re-exportación de símbolos de comercio exterior para 100% de compatibilidad hacia atrás (TICK-EP4-001).
 - `tests/test_extract_comercio_exterior.py` — Suite de 23 pruebas unitarias con 100% de cobertura sobre el módulo de scraping, descarga e idempotencia de comercio exterior (TICK-EP4-001).
