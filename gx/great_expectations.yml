@@ -131,6 +131,42 @@ fluent_datasources:
           batch_def:
             id: 8c95eb37-4809-44e4-a388-ff268de063ef
             partitioner:
+  pandas_runtime_4194:
+    type: pandas
+    id: d6ab1333-89ce-4b02-92c6-bac0201ce0b6
+    assets:
+      df_asset:
+        type: dataframe
+        id: ee5457f7-e940-4885-8cfd-ba51ef97eee2
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: ed94a625-6ef8-4fb7-b045-3fcb12679ce9
+            partitioner:
+  pandas_runtime_6413:
+    type: pandas
+    id: 1ec82b89-bcfa-4e39-a040-16713ac715b4
+    assets:
+      df_asset:
+        type: dataframe
+        id: 6c87f253-b262-40c9-9f49-c46938b75477
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 8274416b-528e-48e6-98d4-2fcc8a783219
+            partitioner:
+  pandas_runtime_1518:
+    type: pandas
+    id: 807d0d9a-5589-4520-ac2b-42d03c7a1907
+    assets:
+      df_asset:
+        type: dataframe
+        id: bb9521b6-f422-4b55-a6ec-d5294b2f006c
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 7a231ab0-e7b9-47f8-82ff-bd1a746d3166
+            partitioner:
 plugins_directory:
 config_variables_file_path:
 analytics_enabled:
