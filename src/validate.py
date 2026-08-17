@@ -351,8 +351,8 @@ def validate_transformed_data(
         with contextlib.suppress(Exception):
             ctx.suites.add(suite)
 
-    # Configurar BatchDefinition y ValidationDefinition
-    ds_name = f"pandas_runtime_{abs(hash(suite_name)) % 10000}"
+    # Configurar BatchDefinition y ValidationDefinition con nombre estático
+    ds_name = "pandas_runtime"
     try:
         ds = ctx.data_sources.get(ds_name)
     except Exception:
@@ -376,7 +376,7 @@ def validate_transformed_data(
     except Exception:
         vd = gx.ValidationDefinition(data=bd, suite=suite, name=val_def_name)
         with contextlib.suppress(Exception):
-            ctx.validation_definitions.add(vd)
+            ctx.validation_definitions.add_or_update(vd)
 
     validation_result = vd.run(batch_parameters={"dataframe": df})
     success = bool(validation_result.success)

@@ -7,6 +7,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+- `src/validate.py` & `gx/great_expectations.yml` — Estandarización a nombre estático único (`pandas_runtime`) para el runtime data source de Great Expectations y manejo resiliente con `add_or_update` en `validation_definitions`, evitando la acumulación de datasources transitorios en el archivo `great_expectations.yml` durante la ejecución de pruebas unitarias.
 - `src/main.py` — Script orquestador principal del pipeline ETL de Comercio Exterior (`run_etl_pipeline`, `process_single_file`, `_discover_files_to_process`, `parse_date_range`, `filter_dataframe_by_date`, `build_arg_parser`, `main`), coordinando la ejecución E2E secuencial (`extract` -> `transform` -> `validate` -> `load`), con flags CLI (`--dry-run`, `--force-reprocess`, `--date-range`, `--operation`, `--skip-extract`, `--file`, `--raw-dir`, `--skip-validation`, `--strict-env`, `--log-level`, `--log-format`), aborto defensivo ante fallos de validación de calidad Great Expectations, registro estructurado de logs en JSON y códigos de salida estándar CLI/HTTP (0 para éxito, 1 para error) para GitHub Actions (TICK-EP4-006).
 - `tests/test_main.py` — Suite de 27 pruebas unitarias con 100% de cobertura sobre el orquestador principal validando el parser CLI, filtrado de fechas/gestiones, descubrimiento de archivos (scraping web, archivo custom y directorios locales), abortos ante fallos de calidad GX, modo dry-run, verificación de idempotencia y códigos de retorno del ejecutable (TICK-EP4-006).
 
