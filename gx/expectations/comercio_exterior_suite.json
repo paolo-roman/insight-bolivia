@@ -1,0 +1,192 @@
+{
+  "expectations": [
+    {
+      "id": "143880d5-23b2-4a7e-9bc6-502adf3e5a95",
+      "kwargs": {
+        "column": "fecha"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "32ed0812-0e26-4601-b2e5-65430842c701",
+      "kwargs": {
+        "column": "codigo_nandina"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f2746a8d-7a8f-444d-872a-116329268227",
+      "kwargs": {
+        "column": "pais_iso"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "6eeb6202-ab70-434d-b707-5a0fc1316ae7",
+      "kwargs": {
+        "column": "tipo_operacion"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "6bf22dce-bebf-4886-a2c9-1d0ce226b788",
+      "kwargs": {
+        "column": "valor_fob_usd",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "79366dad-b55b-47ed-a060-41f4ea9a02e8",
+      "kwargs": {
+        "column": "id_departamento",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "acf30a66-7a01-4a67-bdc3-e85fbbe400ee",
+      "kwargs": {
+        "column": "id_via_transporte",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "935f19ac-12ff-42ab-943a-87e191827716",
+      "kwargs": {
+        "column": "id_aduana",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "7eebb68c-7bbe-495e-b244-0e34cec0bd44",
+      "kwargs": {
+        "column": "anio",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "bee167e8-5813-4047-87a6-16e9e9cb3c71",
+      "kwargs": {
+        "column": "mes",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "fb460e61-1413-4da6-aeac-62a9ca528902",
+      "kwargs": {
+        "column": "trimestre",
+        "mostly": 0.95
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "e1196859-0925-4797-b05f-37ac022ef8f6",
+      "kwargs": {
+        "column": "valor_fob_usd",
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "aea3507f-8f63-45c2-972d-903bb59dcd4a",
+      "kwargs": {
+        "column": "valor_fob_bob",
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "50d80033-a7bc-4e57-986c-8c4c9ee54d3e",
+      "kwargs": {
+        "column": "mes",
+        "max_value": 12.0,
+        "min_value": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "795ab01e-f0c8-4eff-a06e-ead01901a4ea",
+      "kwargs": {
+        "column": "trimestre",
+        "max_value": 4.0,
+        "min_value": 1.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "a79be5cd-d5c5-4f10-bced-cb9d0c213766",
+      "kwargs": {
+        "column_A": "peso_bruto_kg",
+        "column_B": "peso_neto_kg",
+        "or_equal": true
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_pair_values_a_to_be_greater_than_b"
+    },
+    {
+      "id": "2f42cbb0-4cb7-44b3-9df9-5b3e4c35afb2",
+      "kwargs": {
+        "column": "codigo_nandina",
+        "regex": "^\\d{10}$"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_match_regex"
+    },
+    {
+      "id": "ee4db170-af6f-4022-9273-0d36fb2796f8",
+      "kwargs": {
+        "column": "tipo_operacion",
+        "value_set": [
+          "EXPORTACION",
+          "IMPORTACION"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    }
+  ],
+  "id": "80a85525-eae6-412b-9992-9f2cf50a48b0",
+  "meta": {
+    "great_expectations_version": "1.20.0"
+  },
+  "name": "comercio_exterior_suite",
+  "notes": null
+}

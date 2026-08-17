@@ -1,12 +1,11 @@
 # ==============================================================================
-# InsightBolivia — Great Expectations Configuration
+# InsightBolivia — Great Expectations Configuration (GX 1.x)
 # ==============================================================================
-# Configuración mínima de GX. Se expandirá en tickets posteriores.
+# Configuración del Data Context de Great Expectations para validación de calidad
+# de datos del pipeline ETL de Comercio Exterior.
 # ==============================================================================
 
-config_version: 3.0
-
-datasources: {}
+config_version: 4.0
 
 stores:
   expectations_store:
@@ -15,17 +14,124 @@ stores:
       class_name: TupleFilesystemStoreBackend
       base_directory: expectations/
 
-  checkpoints_store:
+  validation_results_store:
+    class_name: ValidationResultsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: uncommitted/validations/
+
+  checkpoint_store:
     class_name: CheckpointStore
     store_backend:
       class_name: TupleFilesystemStoreBackend
+      suppress_store_backend_id: true
       base_directory: checkpoints/
+
+  validation_definition_store:
+    class_name: ValidationDefinitionStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: validation_definitions/
+
+expectations_store_name: expectations_store
+validation_results_store_name: validation_results_store
+checkpoint_store_name: checkpoint_store
 
 data_docs_sites:
   local_site:
     class_name: SiteBuilder
+    show_how_to_buttons: true
     store_backend:
       class_name: TupleFilesystemStoreBackend
       base_directory: uncommitted/data_docs/local_site/
     site_index_builder:
       class_name: DefaultSiteIndexBuilder
+fluent_datasources:
+  pandas_runtime_2505:
+    type: pandas
+    id: ed39a061-eeb9-4f9e-99f3-e57cc008815d
+    assets:
+      df_asset:
+        type: dataframe
+        id: 1cb86089-6935-4f45-9814-a1aa634bcad0
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 0ad9ac88-e29b-4e76-b8e9-773599bb71ca
+            partitioner:
+  pandas_runtime_360:
+    type: pandas
+    id: 99576d5f-afb4-427c-ac69-472672304778
+    assets:
+      df_asset:
+        type: dataframe
+        id: 626b4484-953e-431e-b211-8e743cbf4470
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 5929f033-0ef9-4a8d-90c5-51eaa7f328ad
+            partitioner:
+  pandas_runtime_4518:
+    type: pandas
+    id: 183c9143-0296-4f41-a298-671392c3c117
+    assets:
+      df_asset:
+        type: dataframe
+        id: fd5f66e1-95c9-4f3d-a519-87913a03134c
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 82bb632c-0b86-4f28-b74e-af1fbba32ad6
+            partitioner:
+  pandas_runtime_9640:
+    type: pandas
+    id: 9a0bcdbc-55cd-4c9e-a540-8dcb27c3c034
+    assets:
+      df_asset:
+        type: dataframe
+        id: ab5de23b-ef10-41b7-ae71-1290c305acb9
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: ec119bf1-eb03-4e4b-9707-d1c4d26176f2
+            partitioner:
+  pandas_runtime_5552:
+    type: pandas
+    id: 8fac3947-15d9-4d2b-8a36-262c46d1ab59
+    assets:
+      df_asset:
+        type: dataframe
+        id: 794b5fb7-2d2d-4f40-a6ec-e59d75d3867a
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: d9d8e6d6-8fb7-478c-ab7c-54b36c2d85af
+            partitioner:
+  pandas_runtime_9530:
+    type: pandas
+    id: 1efa33d0-0b38-4cdf-a648-4be0dfe879d5
+    assets:
+      df_asset:
+        type: dataframe
+        id: a82ee5bf-4f9e-4ef3-93ce-70477d6ec4c4
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 0321a2cd-fff3-4a8c-a14f-fa443b258087
+            partitioner:
+  pandas_runtime_5752:
+    type: pandas
+    id: 675157a4-3f35-43d8-8aa2-f4cb16bfa984
+    assets:
+      df_asset:
+        type: dataframe
+        id: 40250420-eea8-4a56-ad03-553458ac13be
+        batch_metadata: {}
+        batch_definitions:
+          batch_def:
+            id: 8c95eb37-4809-44e4-a388-ff268de063ef
+            partitioner:
+plugins_directory:
+config_variables_file_path:
+analytics_enabled:
+data_context_id: 76d293fd-6bf1-445e-bd28-d35b84716c50

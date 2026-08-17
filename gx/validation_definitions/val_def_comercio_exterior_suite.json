@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "1cb86089-6935-4f45-9814-a1aa634bcad0",
+      "name": "df_asset"
+    },
+    "batch_definition": {
+      "id": "0ad9ac88-e29b-4e76-b8e9-773599bb71ca",
+      "name": "batch_def"
+    },
+    "datasource": {
+      "id": "ed39a061-eeb9-4f9e-99f3-e57cc008815d",
+      "name": "pandas_runtime_2505"
+    }
+  },
+  "id": "6920245b-15a3-44c5-9cb0-64bf1377b44d",
+  "name": "val_def_comercio_exterior_suite",
+  "suite": {
+    "id": "80a85525-eae6-412b-9992-9f2cf50a48b0",
+    "name": "comercio_exterior_suite"
+  }
+}
