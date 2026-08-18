@@ -138,7 +138,7 @@ uv run ruff format .
 uv run pytest
 
 # Ejecutar pruebas con cobertura
-uv run pytest --cov=src --cov-report=term-missing --cov-fail-under=90
+uv run pytest --cov=src --cov=streamlit_app --cov-report=term-missing --cov-fail-under=90
 
 # Auditoría de seguridad de dependencias
 uv run pip-audit

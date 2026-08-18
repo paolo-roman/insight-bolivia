@@ -111,6 +111,7 @@ known-first-party = ["src"]
 # ==============================================================================
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -129,8 +130,8 @@ markers = [
 # Coverage Configuration
 # ==============================================================================
 [tool.coverage.run]
-source = ["src"]
-omit = ["tests/*", "streamlit_app/*"]
+source = ["src", "streamlit_app"]
+omit = ["tests/*"]
 
 [tool.coverage.report]
 fail_under = 90

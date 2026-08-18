@@ -1,0 +1,23 @@
+# ==============================================================================
+# InsightBolivia — Configuración Global de Streamlit
+# ==============================================================================
+# Tema visual optimizado con estética profesional, paleta Slate/Navy y acentos
+# representativos de Bolivia (esmeralda/dorado).
+# ==============================================================================
+
+[theme]
+base = "dark"
+primaryColor = "#00A86B"          # Verde esmeralda institucional
+backgroundColor = "#0F172A"       # Slate 900 (Fondo principal)
+secondaryBackgroundColor = "#1E293B" # Slate 800 (Fondo secundario / Sidebars / Cards)
+textColor = "#F8FAFC"             # Slate 50 (Texto de alto contraste)
+font = "sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 50
+
+[browser]
+gatherUsageStats = false
