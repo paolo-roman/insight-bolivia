@@ -6,6 +6,16 @@ from streamlit_app.components.filters import (
     FilterState,
     render_filters,
 )
+from streamlit_app.components.productos_charts import (
+    COLOR_VOLUME,
+    SECTOR_COLORS,
+    build_price_density_scatter,
+    build_sector_distribution_chart,
+    build_top_products_bar_chart,
+    build_top_products_evolution_chart,
+    compute_top_productos_kpis,
+    format_weight_tonnes,
+)
 from streamlit_app.components.socios_charts import (
     COLOR_EXPORT,
     COLOR_IMPORT,
@@ -15,20 +25,29 @@ from streamlit_app.components.socios_charts import (
     build_partner_evolution_chart,
     build_top_partners_bar_chart,
     compute_socios_kpis,
+    format_currency_millions,
 )
 
 __all__ = [
     "COLOR_EXPORT",
     "COLOR_IMPORT",
+    "COLOR_VOLUME",
     "DEPARTAMENTOS_BOLIVIA",
     "FLOW_OPTIONS",
     "FilterState",
+    "SECTOR_COLORS",
     "build_bloc_distribution_chart",
     "build_choropleth_map",
     "build_concentration_curve",
     "build_partner_evolution_chart",
+    "build_price_density_scatter",
+    "build_sector_distribution_chart",
     "build_top_partners_bar_chart",
+    "build_top_products_bar_chart",
+    "build_top_products_evolution_chart",
     "compute_socios_kpis",
+    "compute_top_productos_kpis",
+    "format_currency_millions",
+    "format_weight_tonnes",
     "render_filters",
 ]
-

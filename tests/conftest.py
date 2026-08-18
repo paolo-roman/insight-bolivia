@@ -14,6 +14,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+# Importación temprana de dependencias C para evitar problemas de recarga en Windows/pytest-cov
+import numpy as _np  # noqa: F401
+import pandas as _pd  # noqa: F401
 import pytest
 
 # ---------------------------------------------------------------------------
