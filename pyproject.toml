@@ -46,6 +46,7 @@ dependencies = [
     # --- Visualization ---
     "streamlit>=1.37",
     "plotly>=5.22",
+    "wbgapi>=1.0.14",
 ]
 
 [dependency-groups]
