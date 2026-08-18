@@ -284,7 +284,7 @@ def get_top_productos(
 def get_socios_comerciales(
     flow: str = "EXPORTACION",
     year: int | None = None,
-    limit: int = 15,
+    limit: int | None = None,
     project_id: str | None = None,
     dataset: str | None = None,
 ) -> pd.DataFrame:
@@ -297,7 +297,7 @@ def get_socios_comerciales(
     year:
         Año a filtrar. Si es None, incluye datos de todos los años disponibles.
     limit:
-        Límite de socios comerciales a retornar.
+        Límite de socios comerciales a retornar (opcional). Si es None, retorna todos los países.
     project_id:
         Proyecto de BigQuery (opcional).
     dataset:
@@ -339,7 +339,9 @@ def get_socios_comerciales(
         query += " AND anio = @year"
         params.append(bigquery.ScalarQueryParameter("year", "INT64", year))
 
-    query += f" ORDER BY total_valor_usd DESC LIMIT {limit}"
+    query += " ORDER BY total_valor_usd DESC"
+    if limit is not None:
+        query += f" LIMIT {limit}"
 
     return run_query(query, _params=params)
 
