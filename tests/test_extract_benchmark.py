@@ -390,14 +390,17 @@ class TestBenchmarkCLI:
         exit_code = main(["--countries", "BOL", "PER"])
         assert exit_code == 1
 
-    @patch("sys.exit")
-    def test_extract_benchmark_module_main_execution(self, mock_exit: MagicMock) -> None:
+    def test_extract_benchmark_module_main_execution(self) -> None:
         """Valida la ejecución del script con __name__ == '__main__'."""
         import runpy
 
+        import src.extract_benchmark as eb_mod
+
+        file_path = str(Path(eb_mod.__file__).resolve())
         with (
             patch("sys.argv", ["extract_benchmark.py", "--start-year", "2022"]),
             patch("wbgapi.data.fetch", return_value=[]),
+            pytest.raises(SystemExit) as exc_info,
         ):
-            runpy.run_module("src.extract_benchmark", run_name="__main__", alter_sys=True)
-        mock_exit.assert_called_once_with(0)
+            runpy.run_path(file_path, run_name="__main__")
+        assert exc_info.value.code == 0
