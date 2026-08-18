@@ -26,6 +26,7 @@ from streamlit_app.app import main as home_main
 from streamlit_app.utils.bq_client import (
     get_available_date_range,
     get_balanza_comercial,
+    get_benchmark_indicadores,
     get_export_microdatos,
     get_socios_comerciales,
     get_top_productos,
@@ -41,6 +42,8 @@ balanza_page = importlib.import_module("streamlit_app.pages.01_balanza_comercial
 socios_page = importlib.import_module("streamlit_app.pages.02_socios_comerciales")
 productos_page = importlib.import_module("streamlit_app.pages.03_productos_top")
 descargas_page = importlib.import_module("streamlit_app.pages.04_descargas")
+benchmark_page = importlib.import_module("streamlit_app.pages.05_benchmark_regional")
+
 
 
 @pytest.fixture
@@ -159,6 +162,7 @@ def mock_streamlit_ui() -> Generator[dict[str, MagicMock], None, None]:
         patch("streamlit.info"),
         patch("streamlit.warning"),
         patch("streamlit.caption"),
+        patch("streamlit.checkbox") as mock_chk,
         patch("streamlit.text_input") as mock_txt,
         patch("streamlit.dataframe") as mock_df,
         patch("streamlit.download_button") as mock_down,
@@ -170,6 +174,7 @@ def mock_streamlit_ui() -> Generator[dict[str, MagicMock], None, None]:
             "rad": mock_rad,
             "sli": mock_sli,
             "multi": mock_multi,
+            "chk": mock_chk,
             "cols": mock_cols,
             "tabs": mock_tabs,
             "plot": mock_plot,
@@ -177,6 +182,7 @@ def mock_streamlit_ui() -> Generator[dict[str, MagicMock], None, None]:
             "df": mock_df,
             "down": mock_down,
         }
+
 
 
 class TestEndToEndPageRendering:
@@ -298,14 +304,59 @@ class TestEndToEndPageRendering:
             )
             mock_get.assert_called_once()
 
+    def test_e2e_benchmark_regional_renders_successfully(self) -> None:
+        mock_data = pd.DataFrame({
+            "id_indicador_bm": ["BOL_NE.EXP.GNFS.KD.ZG_2023"],
+            "anio": [2023],
+            "pais_iso": ["BOL"],
+            "pais_nombre": ["Bolivia"],
+            "codigo_indicador": ["NE.EXP.GNFS.KD.ZG"],
+            "nombre_indicador": ["Crecimiento de Exportaciones"],
+            "valor": [4.5],
+            "unidad_medida": ["%"],
+        })
+        with (
+            mock_streamlit_ui() as ui,
+            patch.object(benchmark_page, "log_ui_event") as mock_log,
+            patch.object(benchmark_page, "get_session_id", return_value="e2e-session-uuid-001") as mock_sess,
+            patch.object(benchmark_page, "get_benchmark_indicadores", return_value=mock_data) as mock_get,
+        ):
+            ui["sel"].side_effect = ["NE.EXP.GNFS.KD.ZG", 2023, "PER"]
+            ui["sli"].return_value = (2010, 2023)
+            ui["multi"].return_value = ["BOL", "PER", "CHL"]
+            ui["chk"].return_value = True
+            ui["cols"].return_value = [MagicMock() for _ in range(4)]
+            ui["tabs"].return_value = [MagicMock() for _ in range(5)]
+            benchmark_page.main()
+            mock_sess.assert_called_once()
+            mock_log.assert_called_once_with(
+                session_id="e2e-session-uuid-001", page="05_benchmark_regional", event_type="page_view"
+            )
+            mock_get.assert_called_once()
+
 
 class TestLatencyAndPerformanceSLA:
     """Pruebas de cumplimiento del SLA de latencia (NFR <= 3.0s por consulta)."""
 
     @patch("streamlit_app.utils.bq_client.get_bigquery_client")
+    def test_benchmark_query_latency_under_sla(self, mock_init: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_job = MagicMock()
+        mock_job.to_dataframe.return_value = pd.DataFrame({"valor": [4.5]})
+        mock_client.query.return_value = mock_job
+        mock_init.return_value = mock_client
+
+        t0 = time.perf_counter()
+        result_df = get_benchmark_indicadores(start_year=2020, end_year=2023)
+        assert not result_df.empty
+        assert time.perf_counter() - t0 <= 3.0
+
+
+    @patch("streamlit_app.utils.bq_client.get_bigquery_client")
     def test_cached_query_response_time_under_sla(
         self, mock_init: MagicMock, mock_balanza_data: pd.DataFrame
     ) -> None:
+
         mock_client = MagicMock()
         mock_job = MagicMock()
         mock_job.to_dataframe.return_value = mock_balanza_data

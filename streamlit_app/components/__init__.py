@@ -1,5 +1,20 @@
 """InsightBolivia — Componentes reutilizables de interfaz de usuario para Streamlit."""
 
+from streamlit_app.components.benchmark_charts import (
+    COLOR_BOLIVIA,
+    COLOR_REGIONAL_AVG,
+    COUNTRY_COLORS,
+    COUNTRY_FLAGS,
+    COUNTRY_NAMES_ES,
+    DEFAULT_BENCHMARK_COUNTRIES,
+    INDICATOR_METADATA,
+    build_multidimensional_radar_chart,
+    build_quadrant_scatter_chart,
+    build_ranking_bar_chart,
+    build_time_series_chart,
+    compute_benchmark_kpis,
+    format_indicator_value,
+)
 from streamlit_app.components.descargas_helpers import (
     MAX_DOWNLOAD_RECORDS,
     build_export_filename,
@@ -36,31 +51,45 @@ from streamlit_app.components.socios_charts import (
 )
 
 __all__ = [
+    "COLOR_BOLIVIA",
     "COLOR_EXPORT",
     "COLOR_IMPORT",
+    "COLOR_REGIONAL_AVG",
     "COLOR_VOLUME",
+    "COUNTRY_COLORS",
+    "COUNTRY_FLAGS",
+    "COUNTRY_NAMES_ES",
     "DEPARTAMENTOS_BOLIVIA",
+    "DEFAULT_BENCHMARK_COUNTRIES",
     "FLOW_OPTIONS",
     "FilterState",
+    "INDICATOR_METADATA",
     "MAX_DOWNLOAD_RECORDS",
     "SECTOR_COLORS",
     "build_bloc_distribution_chart",
     "build_choropleth_map",
     "build_concentration_curve",
     "build_export_filename",
+    "build_multidimensional_radar_chart",
     "build_partner_evolution_chart",
     "build_price_density_scatter",
+    "build_quadrant_scatter_chart",
+    "build_ranking_bar_chart",
     "build_sector_distribution_chart",
+    "build_time_series_chart",
     "build_top_partners_bar_chart",
     "build_top_products_bar_chart",
     "build_top_products_evolution_chart",
+    "compute_benchmark_kpis",
     "compute_export_summary",
     "compute_socios_kpis",
     "compute_top_productos_kpis",
     "convert_df_to_csv",
     "convert_df_to_excel",
     "format_currency_millions",
+    "format_indicator_value",
     "format_weight_tonnes",
     "render_filters",
 ]
+
 

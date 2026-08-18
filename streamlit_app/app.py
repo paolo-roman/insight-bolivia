@@ -277,7 +277,22 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="module-card">
+            <div class="module-title">📈 5. Benchmark Regional e Internacional</div>
+            <div class="module-desc">
+                Comparación interactiva de tasas de crecimiento de exportaciones, PIB, inflación y apertura comercial
+                de Bolivia frente a los países de la Región Andina y el Cono Sur con datos del Banco Mundial (WDI).
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.markdown("---")
+
 
     # Arquitectura y Tecnologías
     with st.expander("🛠️ Detalles de Arquitectura y Tecnologías Subyacentes"):

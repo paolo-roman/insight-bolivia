@@ -1,13 +1,11 @@
 """InsightBolivia — Cliente y utilidades de acceso a Google BigQuery para Streamlit.
 
 Proporciona funciones seguras y cacheadas mediante `@st.cache_data(ttl=3600)` para
-consumir las vistas analíticas pre-agregadas del Data Warehouse:
+consumir las vistas analíticas pre-agregadas del Data Warehouse y la tabla de benchmark:
 - `vw_balanza_comercial_mensual`: Exportaciones FOB, Importaciones CIF y Saldo comercial.
 - `vw_top_productos_exportados`: Ranking de productos arancelarios por valor FOB.
 - `vw_socios_comerciales`: Volumen comercial por país de destino/origen y bloque.
-
-Cumple con las restricciones de costo cero ($0 USD) de la capa gratuita (1 TB/mes)
-aplicando filtros por rango de fechas y evitando consultas masivas sin límites.
+- `fact_indicadores_bm`: Indicadores macroeconómicos y de comercio regional del Banco Mundial.
 """
 
 from __future__ import annotations
@@ -63,25 +61,7 @@ def get_bigquery_client(
     project: str | None = None,
     location: str | None = None,
 ) -> bigquery.Client:
-    """Inicializa y retorna un cliente autenticado de Google BigQuery.
-
-    Prioridad de autenticación:
-    1. `st.secrets["gcp_service_account"]` (Streamlit Cloud / secrets.toml)
-    2. Archivo de clave referenciado en variables de entorno (`GCP_SA_KEY_PATH`, `GOOGLE_APPLICATION_CREDENTIALS`)
-    3. Application Default Credentials (ADC) del entorno local o GCP.
-
-    Parameters
-    ----------
-    project:
-        ID del proyecto GCP en BigQuery. Si es None, se resuelve automáticamente.
-    location:
-        Ubicación regional del dataset (por defecto ``US``).
-
-    Returns
-    -------
-    bigquery.Client
-        Cliente autenticado para ejecutar consultas en BigQuery.
-    """
+    """Inicializa y retorna un cliente autenticado de Google BigQuery."""
     bq_secrets = _get_secret_dict("bigquery")
     sa_secrets = _get_secret_dict("gcp_service_account")
 
@@ -105,10 +85,7 @@ def get_bigquery_client(
     if resolved_project:
         client_kwargs["project"] = resolved_project
 
-    # Intentar obtener credenciales de st.secrets
     credentials = _get_credentials_from_secrets()
-
-    # Si no hay credenciales en st.secrets, buscar en variables de entorno
     if credentials is None:
         raw_key_path = os.getenv("GCP_SA_KEY_PATH") or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         if raw_key_path and Path(raw_key_path).is_file():
@@ -127,24 +104,7 @@ def run_query(
     query: str,
     _params: QueryParams | None = None,
 ) -> pd.DataFrame:
-    """Ejecuta una consulta SQL en BigQuery y retorna un DataFrame de pandas.
-
-    La función está protegida con `@st.cache_data(ttl=3600)` para evitar re-escaneos
-    innecesarios y optimizar el consumo de la cuota gratuita de BigQuery.
-
-    Parameters
-    ----------
-    query:
-        Sentencia SQL a ejecutar.
-    _params:
-        Lista o secuencia opcional de parámetros de consulta seguros de BigQuery.
-        El prefijo '_' evita que Streamlit intente hashear objetos no serializables.
-
-    Returns
-    -------
-    pd.DataFrame
-        Resultado de la consulta. Retorna DataFrame vacío si ocurre algún error.
-    """
+    """Ejecuta una consulta SQL en BigQuery con `@st.cache_data(ttl=3600)`."""
     try:
         client = get_bigquery_client()
         job_config = bigquery.QueryJobConfig()
@@ -165,43 +125,17 @@ def get_balanza_comercial(
     project_id: str | None = None,
     dataset: str | None = None,
 ) -> pd.DataFrame:
-    """Consulta los datos de balanza comercial mensual pre-agregados en `vw_balanza_comercial_mensual`.
-
-    Parameters
-    ----------
-    start_date:
-        Fecha inicial del filtro (YYYY-MM-DD o date).
-    end_date:
-        Fecha final del filtro (YYYY-MM-DD o date).
-    project_id:
-        Proyecto de BigQuery (opcional).
-    dataset:
-        Dataset de BigQuery (opcional).
-
-    Returns
-    -------
-    pd.DataFrame
-        Datos ordenados cronológicamente por fecha y mes.
-    """
+    """Consulta los datos de balanza comercial mensual en `vw_balanza_comercial_mensual`."""
     proj = project_id or DEFAULT_PROJECT_ID
     ds = dataset or DEFAULT_DATASET
     view_path = f"`{proj}.{ds}.vw_balanza_comercial_mensual`"
 
     query = f"""
     SELECT
-        anio,
-        mes,
-        nombre_mes,
-        trimestre,
-        semestre,
-        fecha,
-        total_exportaciones_usd,
-        total_importaciones_usd,
-        saldo_balanza_usd,
-        total_peso_neto_exportaciones_kg,
-        total_peso_bruto_importaciones_kg,
-        num_transacciones_exportacion,
-        num_transacciones_importacion
+        anio, mes, nombre_mes, trimestre, semestre, fecha,
+        total_exportaciones_usd, total_importaciones_usd, saldo_balanza_usd,
+        total_peso_neto_exportaciones_kg, total_peso_bruto_importaciones_kg,
+        num_transacciones_exportacion, num_transacciones_importacion
     FROM {view_path}
     WHERE 1=1
     """  # noqa: S608
@@ -218,7 +152,6 @@ def get_balanza_comercial(
         params.append(bigquery.ScalarQueryParameter("end_date", "DATE", e_date))
 
     query += " ORDER BY fecha ASC"
-
     return run_query(query, _params=params if params else None)
 
 
@@ -229,41 +162,16 @@ def get_top_productos(
     project_id: str | None = None,
     dataset: str | None = None,
 ) -> pd.DataFrame:
-    """Consulta el ranking anual de principales productos exportados en `vw_top_productos_exportados`.
-
-    Parameters
-    ----------
-    year:
-        Año específico a filtrar (ej: 2024, 2025, 2026). Si es None, trae todos los años.
-    limit:
-        Número máximo de productos en el ranking (por defecto 10).
-    project_id:
-        Proyecto de BigQuery (opcional).
-    dataset:
-        Dataset de BigQuery (opcional).
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame con ranking, código NANDINA, descripción, sector y totales FOB.
-    """
+    """Consulta el ranking anual de productos en `vw_top_productos_exportados`."""
     proj = project_id or DEFAULT_PROJECT_ID
     ds = dataset or DEFAULT_DATASET
     view_path = f"`{proj}.{ds}.vw_top_productos_exportados`"
 
     query = f"""
     SELECT
-        anio,
-        ranking,
-        codigo_nandina,
-        descripcion_producto,
-        partida_nandina,
-        capitulo_nandina,
-        seccion_nandina,
-        sector_economico,
-        total_fob_usd,
-        total_peso_neto_kg,
-        num_transacciones
+        anio, ranking, codigo_nandina, descripcion_producto,
+        partida_nandina, capitulo_nandina, seccion_nandina, sector_economico,
+        total_fob_usd, total_peso_neto_kg, num_transacciones
     FROM {view_path}
     WHERE ranking <= @limit
     """  # noqa: S608
@@ -276,7 +184,6 @@ def get_top_productos(
         params.append(bigquery.ScalarQueryParameter("year", "INT64", year))
 
     query += " ORDER BY anio DESC, ranking ASC"
-
     return run_query(query, _params=params)
 
 
@@ -288,46 +195,17 @@ def get_socios_comerciales(
     project_id: str | None = None,
     dataset: str | None = None,
 ) -> pd.DataFrame:
-    """Consulta el volumen de comercio exterior por país y bloque en `vw_socios_comerciales`.
-
-    Parameters
-    ----------
-    flow:
-        Tipo de flujo: ``'EXPORTACION'`` o ``'IMPORTACION'``.
-    year:
-        Año a filtrar. Si es None, incluye datos de todos los años disponibles.
-    limit:
-        Límite de socios comerciales a retornar (opcional). Si es None, retorna todos los países.
-    project_id:
-        Proyecto de BigQuery (opcional).
-    dataset:
-        Dataset de BigQuery (opcional).
-
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame con país, ISO, continente, bloque y valores FOB/CIF acumulados.
-    """
+    """Consulta el volumen de comercio exterior por país en `vw_socios_comerciales`."""
     proj = project_id or DEFAULT_PROJECT_ID
     ds = dataset or DEFAULT_DATASET
     view_path = f"`{proj}.{ds}.vw_socios_comerciales`"
 
     query = f"""
     SELECT
-        anio,
-        tipo_operacion,
-        pais_iso,
-        codigo_pais_ine,
-        nombre_pais_es,
-        nombre_pais_en,
-        continente,
-        subregion,
-        bloque_comercial,
-        total_valor_usd,
-        total_fob_usd,
-        total_cif_usd,
-        total_peso_bruto_kg,
-        num_transacciones
+        anio, tipo_operacion, pais_iso, codigo_pais_ine, nombre_pais_es,
+        nombre_pais_en, continente, subregion, bloque_comercial,
+        total_valor_usd, total_fob_usd, total_cif_usd,
+        total_peso_bruto_kg, num_transacciones
     FROM {view_path}
     WHERE tipo_operacion = @flow
     """  # noqa: S608
@@ -351,22 +229,14 @@ def get_available_date_range(
     project_id: str | None = None,
     dataset: str | None = None,
 ) -> tuple[date, date]:
-    """Obtiene la fecha mínima y máxima con registros disponibles en el DWH.
-
-    Returns
-    -------
-    tuple[date, date]
-        (fecha_min, fecha_max). Si la consulta falla, retorna valores por defecto (2020-01-01, hoy).
-    """
+    """Obtiene la fecha mínima y máxima con registros disponibles en el DWH."""
     default_min = date(2020, 1, 1)
     default_max = date.today()
 
     proj = project_id or DEFAULT_PROJECT_ID
     ds = dataset or DEFAULT_DATASET
     query = f"""
-    SELECT
-        MIN(fecha) AS min_date,
-        MAX(fecha) AS max_date
+    SELECT MIN(fecha) AS min_date, MAX(fecha) AS max_date
     FROM `{proj}.{ds}.vw_balanza_comercial_mensual`
     """  # noqa: S608
     df = run_query(query)
@@ -392,37 +262,7 @@ def get_export_microdatos(
     project_id: str | None = None,
     dataset: str | None = None,
 ) -> pd.DataFrame:
-    """Consulta microdatos de comercio exterior para exportación con límite de seguridad.
-
-    Aplica filtros obligatorios por partición temporal (`fecha`) para optimizar el escaneo
-    en la capa gratuita ($0 USD) y evitar desbordamiento de memoria (OOM).
-
-    Parameters
-    ----------
-    start_date:
-        Fecha inicial del filtro (YYYY-MM-DD o date).
-    end_date:
-        Fecha final del filtro (YYYY-MM-DD o date).
-    flow:
-        Tipo de flujo: ``'EXPORTACION'``, ``'IMPORTACION'`` o ``'TODOS'``/None.
-    departamentos:
-        Lista de nombres de departamentos para filtrar (opcional).
-    sectores:
-        Lista de sectores económicos para filtrar (opcional).
-    search_term:
-        Término de búsqueda para código NANDINA o descripción de producto (opcional).
-    limit:
-        Límite máximo de filas a retornar (por defecto 50,001 para detectar límite de 50k).
-    project_id:
-        Proyecto de BigQuery (opcional).
-    dataset:
-        Dataset de BigQuery (opcional).
-
-    Returns
-    -------
-    pd.DataFrame
-        Microdatos con columnas de fecha, producto, país, departamento y valores monetarios/peso.
-    """
+    """Consulta microdatos de comercio exterior para exportación con límite de seguridad."""
     proj = project_id or DEFAULT_PROJECT_ID
     ds = dataset or DEFAULT_DATASET
     fact_table = f"`{proj}.{ds}.fact_comercio_exterior`"
@@ -432,21 +272,14 @@ def get_export_microdatos(
 
     query = f"""
     SELECT
-        f.fecha,
-        f.anio,
-        f.mes,
-        f.tipo_operacion,
-        f.codigo_nandina,
+        f.fecha, f.anio, f.mes, f.tipo_operacion, f.codigo_nandina,
         COALESCE(p.descripcion_producto, 'Sin descripción') AS descripcion_producto,
         COALESCE(p.sector_economico, 'Otros Productos') AS sector_economico,
         f.pais_iso,
         COALESCE(pa.nombre_pais_es, f.pais_iso) AS pais_nombre,
         COALESCE(pa.bloque_comercial, 'Otros') AS bloque_comercial,
         COALESCE(d.nombre_departamento, 'Nacional') AS departamento,
-        f.valor_fob_usd,
-        f.valor_cif_usd,
-        f.peso_neto_kg,
-        f.peso_bruto_kg
+        f.valor_fob_usd, f.valor_cif_usd, f.peso_neto_kg, f.peso_bruto_kg
     FROM {fact_table} f
     LEFT JOIN {dim_prod} p
         ON f.codigo_nandina = p.codigo_nandina AND p.es_vigente = TRUE
@@ -487,6 +320,50 @@ def get_export_microdatos(
         params.append(bigquery.ScalarQueryParameter("search", "STRING", term))
 
     query += f" ORDER BY f.fecha DESC, f.valor_fob_usd DESC LIMIT {limit}"
-
     return run_query(query, _params=params if params else None)
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_benchmark_indicadores(
+    indicator_code: str | None = None,
+    countries: Sequence[str] | None = None,
+    start_year: int | None = None,
+    end_year: int | None = None,
+    project_id: str | None = None,
+    dataset: str | None = None,
+) -> pd.DataFrame:
+    """Consulta indicadores macroeconómicos del Banco Mundial en `fact_indicadores_bm`."""
+    proj = project_id or DEFAULT_PROJECT_ID
+    ds = dataset or "benchmark_regional"
+    table_path = f"`{proj}.{ds}.fact_indicadores_bm`"
+
+    query = f"""
+    SELECT
+        id_indicador_bm, fecha, anio, pais_iso, pais_nombre,
+        codigo_indicador, nombre_indicador, valor, unidad_medida,
+        fuente, fecha_extraccion
+    FROM {table_path}
+    WHERE 1=1
+    """  # noqa: S608
+    params: list[bigquery.ScalarQueryParameter | bigquery.ArrayQueryParameter] = []
+
+    if indicator_code:
+        query += " AND codigo_indicador = @indicator_code"
+        params.append(bigquery.ScalarQueryParameter("indicator_code", "STRING", indicator_code))
+
+    if countries and len(countries) > 0:
+        query += " AND pais_iso IN UNNEST(@countries)"
+        params.append(bigquery.ArrayQueryParameter("countries", "STRING", [c.upper() for c in countries]))
+
+    if start_year is not None:
+        query += " AND anio >= @start_year"
+        params.append(bigquery.ScalarQueryParameter("start_year", "INT64", start_year))
+
+    if end_year is not None:
+        query += " AND anio <= @end_year"
+        params.append(bigquery.ScalarQueryParameter("end_year", "INT64", end_year))
+
+    query += " ORDER BY anio ASC, pais_iso ASC"
+    return run_query(query, _params=params if params else None)
+
 

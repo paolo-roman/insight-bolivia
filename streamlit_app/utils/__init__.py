@@ -3,6 +3,7 @@
 from streamlit_app.utils.bq_client import (
     get_available_date_range,
     get_balanza_comercial,
+    get_benchmark_indicadores,
     get_bigquery_client,
     get_socios_comerciales,
     get_top_productos,
@@ -18,6 +19,7 @@ from streamlit_app.utils.firestore_client import (
 __all__ = [
     "get_available_date_range",
     "get_balanza_comercial",
+    "get_benchmark_indicadores",
     "get_bigquery_client",
     "get_cached_dwh_catalog",
     "get_firestore_client",
@@ -27,3 +29,4 @@ __all__ = [
     "log_ui_event",
     "run_query",
 ]
+

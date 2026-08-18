@@ -20,6 +20,7 @@ from streamlit_app.utils.bq_client import (
     _get_credentials_from_secrets,
     get_available_date_range,
     get_balanza_comercial,
+    get_benchmark_indicadores,
     get_bigquery_client,
     get_export_microdatos,
     get_socios_comerciales,
@@ -41,6 +42,8 @@ def clear_streamlit_cache() -> None:
         get_socios_comerciales.clear()
         get_available_date_range.clear()
         get_export_microdatos.clear()
+        get_benchmark_indicadores.clear()
+
 
 
 class TestGetCredentialsFromSecrets:
@@ -250,4 +253,56 @@ class TestBqViewsQueries:
 
         assert "LIMIT 50001" in query_sql
         assert params is None
+
+    @patch("streamlit_app.utils.bq_client.run_query")
+    def test_get_benchmark_indicadores_with_filters(self, mock_run_query: MagicMock) -> None:
+        mock_run_query.return_value = pd.DataFrame({
+            "id_indicador_bm": ["BOL_NE.EXP.GNFS.KD.ZG_2023"],
+            "valor": [4.5],
+        })
+
+        df = get_benchmark_indicadores(
+            indicator_code="NE.EXP.GNFS.KD.ZG",
+            countries=["BOL", "PER", "CHL"],
+            start_year=2015,
+            end_year=2023,
+        )
+        assert not df.empty
+        mock_run_query.assert_called_once()
+        call_args = mock_run_query.call_args
+        query_sql = call_args[0][0]
+        params = call_args[1]["_params"]
+
+        assert "fact_indicadores_bm" in query_sql
+        assert "codigo_indicador = @indicator_code" in query_sql
+        assert "pais_iso IN UNNEST(@countries)" in query_sql
+        assert "anio >= @start_year" in query_sql
+        assert "anio <= @end_year" in query_sql
+        assert "ORDER BY anio ASC, pais_iso ASC" in query_sql
+
+        assert any(p.name == "indicator_code" and p.value == "NE.EXP.GNFS.KD.ZG" for p in params)
+        assert any(p.name == "start_year" and p.value == 2015 for p in params)
+        assert any(p.name == "end_year" and p.value == 2023 for p in params)
+        assert any(p.name == "countries" and p.values == ["BOL", "PER", "CHL"] for p in params)
+
+
+    @patch("streamlit_app.utils.bq_client.run_query")
+    def test_get_benchmark_indicadores_defaults_no_filters(self, mock_run_query: MagicMock) -> None:
+        mock_run_query.return_value = pd.DataFrame()
+
+        df = get_benchmark_indicadores()
+        assert df.empty
+        mock_run_query.assert_called_once()
+        call_args = mock_run_query.call_args
+        query_sql = call_args[0][0]
+        params = call_args[1]["_params"]
+
+        assert "fact_indicadores_bm" in query_sql
+        assert "codigo_indicador = @" not in query_sql
+        assert "pais_iso IN UNNEST" not in query_sql
+        assert "anio >=" not in query_sql
+        assert "anio <=" not in query_sql
+        assert params is None
+
+
 
