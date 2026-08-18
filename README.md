@@ -163,7 +163,70 @@ uv run python -m src.main --force-reprocess --date-range "2024"
 
 # Ejecutar aplicación Streamlit (local)
 uv run streamlit run streamlit_app/app.py
+
+# Ejecutar suite de pruebas End-to-End (E2E) y verificación de latencia
+uv run pytest tests/test_e2e_streamlit.py
 ```
+
+---
+
+## Despliegue en la Nube y Acceso Público
+
+### 🌐 Aplicativo Web en Vivo
+El dashboard interactivo de **InsightBolivia** está desplegado en la nube con acceso público:
+
+- **Streamlit Community Cloud:** [https://insightbolivia.streamlit.app](https://insightbolivia.streamlit.app) *(URL Oficial)*
+- **Espejo Alternativo:** [https://insight-bolivia.streamlit.app](https://insight-bolivia.streamlit.app)
+- **Hugging Face Spaces (Fallback):** [https://huggingface.co/spaces/paolo-roman/insight-bolivia](https://huggingface.co/spaces/paolo-roman/insight-bolivia)
+
+---
+
+### 🚀 Guía de Despliegue Paso a Paso
+
+#### 1. Despliegue en Streamlit Community Cloud
+1. Iniciar sesión en [Streamlit Community Cloud](https://share.streamlit.io/) con la cuenta de GitHub asociada.
+2. Hacer clic en **"New app"** y seleccionar el repositorio:
+   - **Repository:** `paolo-roman/insight-bolivia` (o `insightbolivia/insight-bolivia`)
+   - **Branch:** `main`
+   - **Main file path:** `streamlit_app/app.py`
+3. En la sección **"Advanced settings" > "Secrets"**, pegar el contenido TOML de credenciales (basado en `streamlit_app/.streamlit/secrets.toml.example`):
+   ```toml
+   [gcp_service_account]
+   type = "service_account"
+   project_id = "insight-bolivia"
+   private_key_id = "tu-private-key-id"
+   private_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+   client_email = "streamlit-sa@insight-bolivia.iam.gserviceaccount.com"
+   client_id = "tu-client-id"
+   auth_uri = "https://accounts.google.com/o/oauth2/auth"
+   token_uri = "https://oauth2.googleapis.com/token"
+   auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+   client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/..."
+
+   [bigquery]
+   project_id = "insight-bolivia"
+   dataset = "comercio_exterior"
+   location = "US"
+
+   [firestore]
+   database = "(default)"
+   project_id = "insight-bolivia"
+   ```
+4. Hacer clic en **"Deploy"**.
+
+#### 2. Despliegue en Hugging Face Spaces (Alternativa)
+1. Crear un nuevo Space en [Hugging Face Spaces](https://huggingface.co/spaces) con SDK **Streamlit**.
+2. Conectar el repositorio de GitHub o sincronizar los archivos vía Git.
+3. En **Settings > Variables and secrets**, configurar los secretos en formato JSON o variables de entorno equivalentes.
+
+---
+
+### ⚡ Rendimiento, SLA y Control de Costos ($0 USD)
+
+- **Latencia de Respuesta ($\le 3.0$ segundos):** Todas las páginas del aplicativo consumen exclusivamente **Vistas SQL Pre-agregadas** en BigQuery (`vw_balanza_comercial_mensual`, `vw_socios_comerciales`, `vw_top_productos_exportados`), complementadas con caché en memoria `@st.cache_data(ttl=3600)`.
+- **Protección de Memoria:** Límite estricto de **50,000 registros** en el Centro de Descargas para prevenir errores Out-Of-Memory (OOM) en el contenedor de Streamlit Cloud (1 GB RAM).
+- **Cero Costos Cloud:** El volumen de escaneo se mantiene por debajo de 1 TB/mes en BigQuery y las operaciones de Firestore se mantienen dentro de las 50,000 lecturas/día del *Always Free Tier*.
+- **Telemetría y Observabilidad:** Registro automático no bloqueante de eventos de interacción y vistas en Cloud Firestore (`ui_analytics`).
 
 ---
 
