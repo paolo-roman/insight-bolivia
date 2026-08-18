@@ -21,6 +21,7 @@ from streamlit_app.utils.bq_client import (
     get_available_date_range,
     get_balanza_comercial,
     get_bigquery_client,
+    get_export_microdatos,
     get_socios_comerciales,
     get_top_productos,
     run_query,
@@ -39,6 +40,7 @@ def clear_streamlit_cache() -> None:
         get_top_productos.clear()
         get_socios_comerciales.clear()
         get_available_date_range.clear()
+        get_export_microdatos.clear()
 
 
 class TestGetCredentialsFromSecrets:
@@ -196,3 +198,56 @@ class TestBqViewsQueries:
         d_min, d_max = get_available_date_range(dataset="empty_ds")
         assert d_min == date(2020, 1, 1)
         assert d_max == date.today()
+
+    @patch("streamlit_app.utils.bq_client.run_query")
+    def test_get_export_microdatos_with_all_filters(self, mock_run_query: MagicMock) -> None:
+        mock_run_query.return_value = pd.DataFrame({
+            "codigo_nandina": ["2711110000"],
+            "valor_fob_usd": [1000.0],
+        })
+
+        df = get_export_microdatos(
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 12, 31),
+            flow="EXPORTACION",
+            departamentos=["Santa Cruz", "La Paz"],
+            sectores=["Hidrocarburos y Derivados"],
+            search_term="Gas",
+            limit=100,
+        )
+        assert not df.empty
+        mock_run_query.assert_called_once()
+        call_args = mock_run_query.call_args
+        query_sql = call_args[0][0]
+        params = call_args[1]["_params"]
+
+        assert "fact_comercio_exterior" in query_sql
+        assert "dim_producto" in query_sql
+        assert "dim_pais" in query_sql
+        assert "dim_departamento_origen_destino" in query_sql
+        assert "f.fecha >= @start_date" in query_sql
+        assert "f.fecha <= @end_date" in query_sql
+        assert "f.tipo_operacion = @flow" in query_sql
+        assert "d.nombre_departamento IN UNNEST(@departamentos)" in query_sql
+        assert "p.sector_economico IN UNNEST(@sectores)" in query_sql
+        assert "LOWER(f.codigo_nandina) LIKE @search" in query_sql
+        assert "LIMIT 100" in query_sql
+
+        assert any(p.name == "start_date" and p.value == "2024-01-01" for p in params)
+        assert any(p.name == "flow" and p.value == "EXPORTACION" for p in params)
+        assert any(p.name == "search" and "%gas%" in p.value for p in params)
+
+    @patch("streamlit_app.utils.bq_client.run_query")
+    def test_get_export_microdatos_unfiltered_defaults(self, mock_run_query: MagicMock) -> None:
+        mock_run_query.return_value = pd.DataFrame()
+
+        df = get_export_microdatos()
+        assert df.empty
+        mock_run_query.assert_called_once()
+        call_args = mock_run_query.call_args
+        query_sql = call_args[0][0]
+        params = call_args[1]["_params"]
+
+        assert "LIMIT 50001" in query_sql
+        assert params is None
+

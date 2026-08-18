@@ -378,3 +378,115 @@ def get_available_date_range(
         return d_min, d_max
 
     return default_min, default_max
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_export_microdatos(
+    start_date: str | date | None = None,
+    end_date: str | date | None = None,
+    flow: str | None = None,
+    departamentos: Sequence[str] | None = None,
+    sectores: Sequence[str] | None = None,
+    search_term: str | None = None,
+    limit: int = 50001,
+    project_id: str | None = None,
+    dataset: str | None = None,
+) -> pd.DataFrame:
+    """Consulta microdatos de comercio exterior para exportación con límite de seguridad.
+
+    Aplica filtros obligatorios por partición temporal (`fecha`) para optimizar el escaneo
+    en la capa gratuita ($0 USD) y evitar desbordamiento de memoria (OOM).
+
+    Parameters
+    ----------
+    start_date:
+        Fecha inicial del filtro (YYYY-MM-DD o date).
+    end_date:
+        Fecha final del filtro (YYYY-MM-DD o date).
+    flow:
+        Tipo de flujo: ``'EXPORTACION'``, ``'IMPORTACION'`` o ``'TODOS'``/None.
+    departamentos:
+        Lista de nombres de departamentos para filtrar (opcional).
+    sectores:
+        Lista de sectores económicos para filtrar (opcional).
+    search_term:
+        Término de búsqueda para código NANDINA o descripción de producto (opcional).
+    limit:
+        Límite máximo de filas a retornar (por defecto 50,001 para detectar límite de 50k).
+    project_id:
+        Proyecto de BigQuery (opcional).
+    dataset:
+        Dataset de BigQuery (opcional).
+
+    Returns
+    -------
+    pd.DataFrame
+        Microdatos con columnas de fecha, producto, país, departamento y valores monetarios/peso.
+    """
+    proj = project_id or DEFAULT_PROJECT_ID
+    ds = dataset or DEFAULT_DATASET
+    fact_table = f"`{proj}.{ds}.fact_comercio_exterior`"
+    dim_prod = f"`{proj}.{ds}.dim_producto`"
+    dim_pais = f"`{proj}.{ds}.dim_pais`"
+    dim_dept = f"`{proj}.{ds}.dim_departamento_origen_destino`"
+
+    query = f"""
+    SELECT
+        f.fecha,
+        f.anio,
+        f.mes,
+        f.tipo_operacion,
+        f.codigo_nandina,
+        COALESCE(p.descripcion_producto, 'Sin descripción') AS descripcion_producto,
+        COALESCE(p.sector_economico, 'Otros Productos') AS sector_economico,
+        f.pais_iso,
+        COALESCE(pa.nombre_pais_es, f.pais_iso) AS pais_nombre,
+        COALESCE(pa.bloque_comercial, 'Otros') AS bloque_comercial,
+        COALESCE(d.nombre_departamento, 'Nacional') AS departamento,
+        f.valor_fob_usd,
+        f.valor_cif_usd,
+        f.peso_neto_kg,
+        f.peso_bruto_kg
+    FROM {fact_table} f
+    LEFT JOIN {dim_prod} p
+        ON f.codigo_nandina = p.codigo_nandina AND p.es_vigente = TRUE
+    LEFT JOIN {dim_pais} pa
+        ON f.pais_iso = pa.pais_iso
+    LEFT JOIN {dim_dept} d
+        ON f.id_departamento = d.id_departamento
+    WHERE 1=1
+    """  # noqa: S608
+
+    params: list[bigquery.ScalarQueryParameter | bigquery.ArrayQueryParameter] = []
+
+    if start_date is not None:
+        s_date = start_date.isoformat() if isinstance(start_date, (date, datetime)) else start_date
+        query += " AND f.fecha >= @start_date"
+        params.append(bigquery.ScalarQueryParameter("start_date", "DATE", s_date))
+
+    if end_date is not None:
+        e_date = end_date.isoformat() if isinstance(end_date, (date, datetime)) else end_date
+        query += " AND f.fecha <= @end_date"
+        params.append(bigquery.ScalarQueryParameter("end_date", "DATE", e_date))
+
+    if flow and flow.upper() in ("EXPORTACION", "IMPORTACION"):
+        query += " AND f.tipo_operacion = @flow"
+        params.append(bigquery.ScalarQueryParameter("flow", "STRING", flow.upper()))
+
+    if departamentos and len(departamentos) > 0 and len(departamentos) < 9:
+        query += " AND d.nombre_departamento IN UNNEST(@departamentos)"
+        params.append(bigquery.ArrayQueryParameter("departamentos", "STRING", list(departamentos)))
+
+    if sectores and len(sectores) > 0:
+        query += " AND p.sector_economico IN UNNEST(@sectores)"
+        params.append(bigquery.ArrayQueryParameter("sectores", "STRING", list(sectores)))
+
+    if search_term and search_term.strip():
+        term = f"%{search_term.strip().lower()}%"
+        query += " AND (LOWER(f.codigo_nandina) LIKE @search OR LOWER(p.descripcion_producto) LIKE @search)"
+        params.append(bigquery.ScalarQueryParameter("search", "STRING", term))
+
+    query += f" ORDER BY f.fecha DESC, f.valor_fob_usd DESC LIMIT {limit}"
+
+    return run_query(query, _params=params if params else None)
+
