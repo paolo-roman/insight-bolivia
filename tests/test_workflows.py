@@ -150,6 +150,43 @@ class TestEtlComercioExteriorWorkflow:
         with_block = upload_step.get("with", {})
         assert "gx/uncommitted/data_docs/" in with_block.get("path", "")
 
+    def test_permissions_configuration(self, etl_data: dict[str, Any]) -> None:
+        """Valida que el workflow configure permisos de escritura para actualizar last_run.txt."""
+        assert "permissions" in etl_data, "El bloque 'permissions' no está configurado en el workflow."
+        permissions = etl_data["permissions"]
+        assert isinstance(permissions, dict)
+        assert permissions.get("contents") == "write", "Se requiere permiso 'contents: write' para commits automáticos."
+
+    def test_discord_failure_notification_step(self, etl_data: dict[str, Any]) -> None:
+        """Valida el paso de envío de alerta a Discord Webhook ante fallos."""
+        steps = etl_data["jobs"]["run-etl"]["steps"]
+        webhook_steps = [
+            s
+            for s in steps
+            if "src.notifications" in s.get("run", "") or "DISCORD_WEBHOOK_URL" in str(s.get("env", {}))
+        ]
+        assert len(webhook_steps) == 1, "Debe existir exactamente un paso de alerta por webhook."
+
+        webhook_step = webhook_steps[0]
+        assert webhook_step.get("if") == "failure()", "El paso de alerta debe ejecutarse con 'if: failure()'."
+        assert "DISCORD_WEBHOOK_URL" in webhook_step.get("env", {})
+        assert "secrets.DISCORD_WEBHOOK_URL" in webhook_step["env"]["DISCORD_WEBHOOK_URL"]
+        assert "send-github-alert" in webhook_step.get("run", "")
+
+    def test_anti_cron_deactivation_step(self, etl_data: dict[str, Any]) -> None:
+        """Valida el paso de actualización y commit de last_run.txt para persistencia de cron."""
+        steps = etl_data["jobs"]["run-etl"]["steps"]
+        anti_cron_steps = [s for s in steps if "last_run.txt" in s.get("run", "")]
+        assert len(anti_cron_steps) == 1, "Debe existir un paso que actualice 'last_run.txt'."
+
+        anti_cron_step = anti_cron_steps[0]
+        assert anti_cron_step.get("if") == "success()", "El paso debe ejecutarse solo ante éxito ('if: success()')."
+        run_cmd = anti_cron_step.get("run", "")
+        assert "last_run.txt" in run_cmd
+        assert "github-actions[bot]" in run_cmd
+        assert "[skip ci]" in run_cmd
+        assert "git push" in run_cmd
+
     def test_no_hardcoded_secrets(self, etl_data: dict[str, Any]) -> None:
         """Verifica que no existan credenciales en texto plano en el archivo de workflow."""
         raw_text = ETL_WORKFLOW_FILE.read_text(encoding="utf-8")

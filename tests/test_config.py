@@ -27,6 +27,7 @@ from src.config import (
     BigQueryConfig,
     DataQualityConfig,
     LoggingConfig,
+    NotificationConfig,
     PipelineConfig,
     Settings,
     SourceConfig,
@@ -90,6 +91,11 @@ class TestConfigModels:
         assert cfg.level == "INFO"
         assert cfg.format == "json"
         assert cfg.retention_days == 90
+
+    def test_notification_config_defaults(self) -> None:
+        cfg = NotificationConfig()
+        assert cfg.discord_webhook_url == ""
+        assert cfg.alert_email == ""
 
     def test_settings_frozen(self) -> None:
         settings = Settings()
@@ -182,11 +188,21 @@ class TestApplyEnvOverrides:
         merged = _apply_env_overrides(raw)
         assert merged["bigquery"]["project_id"] == "fallback-gcp-project"
 
+    def test_override_notifications(self, monkeypatch: MonkeyPatch) -> None:
+        monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://discord.com/api/webhooks/123/xyz")
+        monkeypatch.setenv("ALERT_EMAIL", "alerts@insightbolivia.org")
+
+        raw = {"notifications": {}}
+        merged = _apply_env_overrides(raw)
+        assert merged["notifications"]["discord_webhook_url"] == "https://discord.com/api/webhooks/123/xyz"
+        assert merged["notifications"]["alert_email"] == "alerts@insightbolivia.org"
+
     def test_override_handles_non_dict_sections(self) -> None:
-        raw = {"bigquery": "invalid_type", "logging": "invalid_type"}
+        raw = {"bigquery": "invalid_type", "logging": "invalid_type", "notifications": "invalid_type"}
         merged = _apply_env_overrides(raw)
         assert isinstance(merged["bigquery"], dict)
         assert isinstance(merged["logging"], dict)
+        assert isinstance(merged["notifications"], dict)
 
 
 class TestLoadDotenvFile:

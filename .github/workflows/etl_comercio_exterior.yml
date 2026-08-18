@@ -40,6 +40,9 @@ concurrency:
   group: etl-comercio-exterior-pipeline
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   run-etl:
     name: Pipeline ETL Comercio Exterior (Extract -> Transform -> Validate -> Load)
@@ -107,3 +110,19 @@ jobs:
             *.log
           retention-days: 14
           if-no-files-found: ignore
+
+      - name: Send Failure Notification via Discord Webhook
+        if: failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          uv run python -m src.notifications send-github-alert --status failure --error "El pipeline ETL de Comercio Exterior ha fallado durante la ejecución en GitHub Actions."
+
+      - name: Update last_run.txt timestamp (Anti-Cron Deactivation)
+        if: success()
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > last_run.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add last_run.txt
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(cron): update last_run.txt timestamp [skip ci]" && git push)

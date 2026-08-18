@@ -50,3 +50,8 @@ logging:
   format: "json"
   retention_days: 90
 
+# Configuración de Alertas y Notificaciones (Discord Webhooks / Email)
+notifications:
+  discord_webhook_url: ""
+  alert_email: ""
+

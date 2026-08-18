@@ -127,6 +127,19 @@ class LoggingConfig(BaseModel):
     )
 
 
+class NotificationConfig(BaseModel):
+    """Configuración de alertas y notificaciones (Discord Webhooks / Email)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    discord_webhook_url: str = Field(
+        default="", description="URL del Webhook de Discord para alertas de fallos"
+    )
+    alert_email: str = Field(
+        default="", description="Dirección de correo electrónico para alertas operacionales"
+    )
+
+
 class Settings(BaseModel):
     """Configuración global consolidada de la plataforma InsightBolivia."""
 
@@ -138,6 +151,7 @@ class Settings(BaseModel):
     data_quality: DataQualityConfig = Field(default_factory=DataQualityConfig)
     streamlit: StreamlitConfig = Field(default_factory=StreamlitConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    notifications: NotificationConfig = Field(default_factory=NotificationConfig)
 
 
 def load_dotenv_file(
@@ -377,6 +391,16 @@ def _apply_env_overrides(raw_config: dict[str, Any]) -> dict[str, Any]:
         log_section["level"] = env_val.upper()
     if env_val := os.getenv("LOG_FORMAT"):
         log_section["format"] = env_val.lower()
+
+    notif_section = config.setdefault("notifications", {})
+    if not isinstance(notif_section, dict):
+        notif_section = {}
+        config["notifications"] = notif_section
+
+    if env_val := os.getenv("DISCORD_WEBHOOK_URL"):
+        notif_section["discord_webhook_url"] = env_val
+    if env_val := os.getenv("ALERT_EMAIL"):
+        notif_section["alert_email"] = env_val
 
     return config
 
