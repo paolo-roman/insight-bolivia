@@ -42,5 +42,21 @@
         "sort_order": 3
       }
     ]
+  },
+  {
+    "id": "benchmark_regional",
+    "code": "benchmark_regional",
+    "name": "Benchmark Regional y Macroeconómico",
+    "description": "Indicadores macroeconómicos y de desarrollo comparativos entre Bolivia y países de la región (Perú, Chile, Colombia, Paraguay, etc.), extraídos de la API de datos abiertos del Banco Mundial (WDI).",
+    "bq_dataset": "benchmark_regional",
+    "bq_project": "insight-bolivia",
+    "streamlit_url": "https://insightbolivia.streamlit.app",
+    "icon": "🌐",
+    "status": "active",
+    "data_source": "Banco Mundial (World Development Indicators - WDI)",
+    "update_frequency": "anual",
+    "last_data_refresh": null,
+    "record_count": 0,
+    "views": []
   }
 ]

@@ -145,6 +145,16 @@ class TestDimensionSeeding:
         assert cnt == 80
         mock_bq_client.insert_rows_json.assert_not_called()
 
+    def test_seed_dim_pais_already_seeded(self, mock_bq_client: MagicMock) -> None:
+        mock_row = MagicMock()
+        mock_row.cnt = 80
+        mock_job = MagicMock()
+        mock_job.result.return_value = [mock_row]
+        mock_bq_client.query.return_value = mock_job
+        cnt = seed_dim_pais(mock_bq_client, "insight-bolivia", dry_run=False)
+        assert cnt == 80
+        mock_bq_client.insert_rows_json.assert_not_called()
+
 
 class TestProvisionDwh:
     """Pruebas de integración del flujo integral provision_dwh."""

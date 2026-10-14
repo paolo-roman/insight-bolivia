@@ -279,11 +279,11 @@ def seed_dim_moneda(client: bigquery.Client | None, project_id: str, dry_run: bo
     sql = f"""
     MERGE {table_ref} T
     USING (
-        SELECT 'BOB' AS cod, 'Boliviano' AS nom, 6.96 AS tc, DATE('2011-11-01') AS f,
+        SELECT 'BOB' AS cod, 'Boliviano' AS nom, NUMERIC '6.96' AS tc, DATE('2011-11-01') AS f,
                DATE('2011-11-01') AS vd, CAST(NULL AS DATE) AS vh, TRUE AS vig UNION ALL
-        SELECT 'USD', 'Dólar Americano', 1.00, DATE('2000-01-01'),
+        SELECT 'USD', 'Dólar Americano', NUMERIC '1.00', DATE('2000-01-01'),
                DATE('2000-01-01'), CAST(NULL AS DATE), TRUE UNION ALL
-        SELECT 'EUR', 'Euro', 1.08, DATE('2024-01-01'),
+        SELECT 'EUR', 'Euro', NUMERIC '1.08', DATE('2024-01-01'),
                DATE('2024-01-01'), CAST(NULL AS DATE), TRUE
     ) S
     ON T.codigo_moneda = S.cod AND T.es_vigente = TRUE
@@ -358,6 +358,14 @@ def seed_dim_pais(client: bigquery.Client | None, project_id: str, dry_run: bool
 
     if client is None:
         raise RuntimeError("Cliente de BigQuery no provisto.")
+
+    # Idempotencia: Verificar si ya hay datos en dim_pais
+    check_job = client.query(f"SELECT COUNT(1) AS cnt FROM `{project_id}.comercio_exterior.dim_pais`")  # noqa: S608
+    query_result = check_job.result() if check_job is not None else None
+    results = list(query_result) if query_result is not None else []
+    if results and getattr(results[0], "cnt", 0) > 0:
+        logger.info("dim_pais ya contiene %d registros. Omitiendo reinserción.", results[0].cnt)
+        return int(results[0].cnt)
 
     table = client.get_table(f"{project_id}.comercio_exterior.dim_pais")
     batch_size = 100

@@ -5,6 +5,12 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+- `uv.lock` — Actualización y resolución de dependencias transitivas vulnerables detectadas por la auditoría de seguridad `pip-audit` en el flujo de CI de GitHub Actions (`jupyter-server>=2.21.1`, `jupyterlab>=4.6.4`, `multidict>=7.1.0`, `notebook>=7.6.3`, `pyjwt>=2.15.1`, `tornado>=6.5.10`, `urllib3>=2.8.0`), subsanando 26 vulnerabilidades reportadas (PYSEC-2026-4054, PYSEC-2026-4055, PYSEC-2026-4056, PYSEC-2026-4057, CVE-2026-104874, PYSEC-2026-4112, PYSEC-2026-4140..4183, GHSA-chx6-46f5-w4vp, GHSA-c2m8-h5v5-343r, GHSA-3hv7-mjh2-fv65, PYSEC-2026-4175..4177).
+
+- `src/init_dwh.py` & `tests/test_init_dwh.py` — Manejo seguro del resultado de la consulta de verificación de idempotencia en `seed_dim_pais`, asegurando compatibilidad con resultados nulos o simulados en pruebas y añadiendo caso de prueba unitaria `test_seed_dim_pais_already_seeded`.
+
+- `tests/test_seed_firestore.py` — Actualización de `test_seed_file_validates_against_pydantic_model` para soportar múltiples catálogos en `seed_catalog.json` (`comercio_exterior` y `benchmark_regional`).
+
 - `src/init_dwh.py` & `tests/test_init_dwh.py` — Módulo de aprovisionamiento automatizado del Data Warehouse en Google BigQuery para InsightBolivia. Orquesta la creación secuencial e idempotente de los 4 datasets (`staging`, `comercio_exterior`, `benchmark_regional`, `operations`), 12 tablas del modelo estrella, 3 vistas analíticas pre-agregadas (`vw_balanza_comercial_mensual`, `vw_socios_comerciales`, `vw_top_productos_exportados`) y la siembra de dimensiones estáticas (`dim_tiempo` 2000-2030, `dim_departamento_origen_destino`, `dim_via_transporte`, `dim_moneda`, `dim_pais`), con soporte para simulación (`--dry-run`) y suite de 22 pruebas unitarias con 94% de cobertura.
 
 - `.streamlit/config.toml` — Configuración de tema visual oscuro institucional (Slate/Emerald) en la raíz del repositorio, asegurando que Streamlit Community Cloud aplique el fondo oscuro y previniendo que los textos aparezcan en blanco sobre fondo claro por discrepancia de tema.

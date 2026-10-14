@@ -106,11 +106,15 @@ class TestSeedCatalogJsonFile:
     def test_seed_file_validates_against_pydantic_model(self, seed_file_path: Path) -> None:
         """Verifica que todos los elementos cumplan el modelo DwhCatalog."""
         data = json.loads(seed_file_path.read_text(encoding="utf-8"))
+        assert len(data) >= 1
         for item in data:
             catalog = DwhCatalog.model_validate(item)
             assert isinstance(catalog, DwhCatalog)
-            assert catalog.code == "comercio_exterior"
-            assert len(catalog.views) == 3
+            assert catalog.code in {"comercio_exterior", "benchmark_regional"}
+            if catalog.code == "comercio_exterior":
+                assert len(catalog.views) == 3
+            elif catalog.code == "benchmark_regional":
+                assert len(catalog.views) == 0
 
 
 # ==============================================================================

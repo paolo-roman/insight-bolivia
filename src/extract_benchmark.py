@@ -269,7 +269,6 @@ def load_benchmark_to_bigquery(
 
     job_config = bigquery.LoadJobConfig(
         write_disposition="WRITE_TRUNCATE",
-        schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION],
     )
 
     try:
@@ -283,7 +282,14 @@ def load_benchmark_to_bigquery(
 
     merge_sql = f"""
         MERGE {target_table} T
-        USING `{stg_table}` S
+        USING (
+            SELECT
+                id_indicador_bm, fecha, anio, pais_iso, pais_nombre,
+                codigo_indicador, nombre_indicador,
+                CAST(valor AS NUMERIC) AS valor,
+                unidad_medida, fuente, fecha_extraccion
+            FROM `{stg_table}`
+        ) S
         ON T.pais_iso = S.pais_iso
             AND T.codigo_indicador = S.codigo_indicador
             AND T.anio = S.anio
