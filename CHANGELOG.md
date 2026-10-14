@@ -5,7 +5,13 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
-- `README.md` — Actualización de la documentación de arquitectura y guía de despliegue en la nube, consolidando Streamlit Community Cloud como plataforma oficial tanto para la instancia principal (`insightbolivia.streamlit.app`) como para el espejo de respaldo (`insight-bolivia.streamlit.app`), y retirando el fallback de Hugging Face Spaces debido a las restricciones de pago (PRO) para cómputo backend en dicha plataforma, preservando la premisa de costo $0 USD de la solución.
+- `src/init_dwh.py` & `tests/test_init_dwh.py` — Módulo de aprovisionamiento automatizado del Data Warehouse en Google BigQuery para InsightBolivia. Orquesta la creación secuencial e idempotente de los 4 datasets (`staging`, `comercio_exterior`, `benchmark_regional`, `operations`), 12 tablas del modelo estrella, 3 vistas analíticas pre-agregadas (`vw_balanza_comercial_mensual`, `vw_socios_comerciales`, `vw_top_productos_exportados`) y la siembra de dimensiones estáticas (`dim_tiempo` 2000-2030, `dim_departamento_origen_destino`, `dim_via_transporte`, `dim_moneda`, `dim_pais`), con soporte para simulación (`--dry-run`) y suite de 22 pruebas unitarias con 94% de cobertura.
+
+- `.streamlit/config.toml` — Configuración de tema visual oscuro institucional (Slate/Emerald) en la raíz del repositorio, asegurando que Streamlit Community Cloud aplique el fondo oscuro y previniendo que los textos aparezcan en blanco sobre fondo claro por discrepancia de tema.
+
+- `streamlit_app/app.py` — Inyección defensiva de la ruta raíz del proyecto en `sys.path` antes de importar submódulos locales para garantizar la resolución de dependencias en cualquier entorno de ejecución de Streamlit Cloud.
+
+- `README.md` — Incorporación de comandos CLI de aprovisionamiento del DWH (`uv run python -m src.init_dwh`), siembra de catálogo operacional (`uv run python -m src.seed_firestore`) y carga de series de benchmark internacional (`uv run python -m src.extract_benchmark`).
 
 - `.github/workflows/etl_comercio_exterior.yml` — Optimización del orden de pasos de inicialización del runner en GitHub Actions: reubicación de `astral-sh/setup-uv`, `uv python install` y `uv sync` antes de `google-github-actions/auth@v2`. Esto asegura que el entorno de ejecución (`uv` y dependencias de Python) esté completamente operativo para el paso de notificación de fallos (`Send Failure Notification via Discord Webhook`), evitando errores de comando no encontrado si la autenticación de GCP falla.
 

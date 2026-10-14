@@ -11,11 +11,18 @@ Ejecución local:
 from __future__ import annotations
 
 import logging
+import sys
 from datetime import UTC, datetime
+from pathlib import Path
 
-import streamlit as st
+# Garantizar que la raíz del proyecto esté en sys.path para importaciones en Streamlit Cloud
+_ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(_ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(_ROOT_DIR))
 
-from streamlit_app.utils.firestore_client import (
+import streamlit as st  # noqa: E402
+
+from streamlit_app.utils.firestore_client import (  # noqa: E402
     get_cached_dwh_catalog,
     get_session_id,
     log_ui_event,

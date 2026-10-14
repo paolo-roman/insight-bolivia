@@ -149,10 +149,16 @@ uv run jupyter notebook
 # Ejecutar orquestador EDA con Papermill
 uv run papermill notebooks/00_orquestador_eda.ipynb notebooks/output/eda_run.ipynb
 
-# Aprovisionar datasets en BigQuery (DDL / CLI)
-# Consultar definiciones y scripts en: sql/ddl/00_create_datasets.sql
+# Aprovisionar datasets, tablas del modelo estrella, vistas y dimensiones en BigQuery
+uv run python -m src.init_dwh
 
-# Ejecutar pipeline ETL completo (Extracción, Transformación, Validación y Carga)
+# Inicializar catálogo operacional en Cloud Firestore
+uv run python -m src.seed_firestore
+
+# Cargar indicadores macroeconómicos de benchmark regional (Banco Mundial)
+uv run python -m src.extract_benchmark
+
+# Ejecutar pipeline ETL completo de Comercio Exterior (INE Bolivia)
 uv run python -m src.main
 
 # Ejecutar pipeline ETL en modo simulación (dry-run)
