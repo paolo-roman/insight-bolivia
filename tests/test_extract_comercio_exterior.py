@@ -386,6 +386,33 @@ class TestDownloadResource:
         assert "Connection reset" in (meta.error_message or "")
         assert len(list(tmp_path.iterdir())) == 0
 
+    def test_download_sanitizes_path_traversal_filename(self, tmp_path: Path) -> None:
+        content = b"Malicious Path Traversal Content"
+        mock_resp = MagicMock()
+        mock_resp.headers = {"Content-Disposition": 'attachment; filename="../../etc/shadow"'}
+        mock_resp.iter_content.return_value = [content]
+        mock_resp.raise_for_status.return_value = None
+        mock_resp.__enter__.return_value = mock_resp
+        mock_resp.__exit__.return_value = None
+
+        mock_session = MagicMock(spec=requests.Session)
+        mock_session.get.return_value = mock_resp
+
+        res = ScrapedResource(
+            title="TRAVERSAL",
+            url="https://nube.ine.gob.bo/s/traversal/download",
+            operation_type="exportaciones",
+        )
+
+        meta = download_resource(res, output_dir=tmp_path, session=mock_session)
+
+        assert meta.status == "DOWNLOADED"
+        assert meta.filename == "shadow"
+        assert meta.file_path == tmp_path / "shadow"
+        assert meta.file_path.exists()
+        assert not (tmp_path.parent / "etc" / "shadow").exists()
+
+
 
 # ---------------------------------------------------------------------------
 # Tests: _collect_existing_disk_hashes & extract_comercio_exterior

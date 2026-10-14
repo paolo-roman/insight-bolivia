@@ -8,6 +8,7 @@ garantizando costo cero ($0 USD) y tiempos de respuesta óptimos (<= 3.0s).
 
 from __future__ import annotations
 
+import html
 import logging
 from datetime import UTC, datetime
 from typing import Any
@@ -269,25 +270,38 @@ def main() -> None:
 
     col1, col2, col3, col4 = st.columns(4)
 
+    bol_val_str = format_indicator_value(kpis["bolivia_value"], unit)
+    avg_val_str = format_indicator_value(kpis["regional_avg"], unit)
+    rank = kpis["bolivia_rank"]
+    total_c = kpis["total_countries"]
+    rank_str = f"Puesto #{rank} de {total_c}" if rank else "N/D"
+    best_str = f"Líder: {kpis['best_country_name']}"
+
+    # Sanitización defensiva contra XSS (FE-01)
+    safe_focus_year = html.escape(str(focus_year))
+    safe_color_bolivia = html.escape(str(COLOR_BOLIVIA))
+    safe_bol_val = html.escape(str(bol_val_str))
+    safe_avg_val = html.escape(str(avg_val_str))
+    safe_rank = html.escape(str(rank_str))
+    safe_best = html.escape(str(best_str))
+
     with col1:
-        bol_val_str = format_indicator_value(kpis["bolivia_value"], unit)
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-title">🇧🇴 Bolivia ({focus_year})</div>
-                <div class="metric-val" style="color: {COLOR_BOLIVIA};">{bol_val_str}</div>
+                <div class="metric-title">🇧🇴 Bolivia ({safe_focus_year})</div>
+                <div class="metric-val" style="color: {safe_color_bolivia};">{safe_bol_val}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
     with col2:
-        avg_val_str = format_indicator_value(kpis["regional_avg"], unit)
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-title">Promedio Regional ({focus_year})</div>
-                <div class="metric-val">{avg_val_str}</div>
+                <div class="metric-title">Promedio Regional ({safe_focus_year})</div>
+                <div class="metric-val">{safe_avg_val}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -298,7 +312,8 @@ def main() -> None:
         if delta is not None:
             badge_class = "badge-positive" if delta >= 0 else "badge-negative"
             delta_sign = "+" if delta > 0 else ""
-            delta_str = f"<span class='{badge_class}'>{delta_sign}{delta:.2f} {unit} vs Prom.</span>"
+            safe_unit = html.escape(str(unit))
+            delta_str = f"<span class='{badge_class}'>{delta_sign}{delta:.2f} {safe_unit} vs Prom.</span>"
         else:
             delta_str = "<span class='badge-positive'>N/D</span>"
 
@@ -313,18 +328,13 @@ def main() -> None:
         )
 
     with col4:
-        rank = kpis["bolivia_rank"]
-        total_c = kpis["total_countries"]
-        rank_str = f"Puesto #{rank} de {total_c}" if rank else "N/D"
-        best_str = f"Líder: {kpis['best_country_name']}"
-
         st.markdown(
             f"""
             <div class="metric-box">
                 <div class="metric-title">Posición Regional</div>
                 <div class="metric-val" style="font-size: 1.2rem; margin-top: 0.5rem;">
-                    🏆 {rank_str}
-                    <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px;">{best_str}</div>
+                    🏆 {safe_rank}
+                    <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 2px;">{safe_best}</div>
                 </div>
             </div>
             """,

@@ -10,6 +10,7 @@ Ejecución local:
 
 from __future__ import annotations
 
+import html
 import logging
 import sys
 from datetime import UTC, datetime
@@ -175,6 +176,12 @@ def main() -> None:
         record_count = "2,150,000+"
         data_source = "INE - Instituto Nacional de Estadística"
 
+    # Sanitización de salida contra XSS (FE-01)
+    safe_status = html.escape(str(status_label))
+    safe_last_refresh = html.escape(str(last_refresh))
+    safe_record_count = html.escape(str(record_count))
+    safe_data_source = html.escape(str(data_source))
+
     # Tarjetas de Métricas de Estado del Data Warehouse
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -182,7 +189,7 @@ def main() -> None:
             f"""
             <div class="metric-card">
                 <div class="metric-title">Estado Operativo</div>
-                <div class="metric-value"><span class="badge-active">🟢 {status_label}</span></div>
+                <div class="metric-value"><span class="badge-active">🟢 {safe_status}</span></div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -192,7 +199,7 @@ def main() -> None:
             f"""
             <div class="metric-card">
                 <div class="metric-title">Última Sincronización</div>
-                <div class="metric-value" style="font-size: 1.2rem; margin-top: 0.6rem;">{last_refresh}</div>
+                <div class="metric-value" style="font-size: 1.2rem; margin-top: 0.6rem;">{safe_last_refresh}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -202,7 +209,7 @@ def main() -> None:
             f"""
             <div class="metric-card">
                 <div class="metric-title">Registros Consolidados</div>
-                <div class="metric-value">{record_count}</div>
+                <div class="metric-value">{safe_record_count}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -212,7 +219,7 @@ def main() -> None:
             f"""
             <div class="metric-card">
                 <div class="metric-title">Fuente Oficial</div>
-                <div class="metric-value" style="font-size: 1.1rem; margin-top: 0.7rem;">{data_source}</div>
+                <div class="metric-value" style="font-size: 1.1rem; margin-top: 0.7rem;">{safe_data_source}</div>
             </div>
             """,
             unsafe_allow_html=True,

@@ -183,7 +183,8 @@ class TestBqViewsQueries:
 
         assert "vw_socios_comerciales" in query_sql
         assert "tipo_operacion = @flow" in query_sql
-        assert "LIMIT 10" in query_sql
+        assert "LIMIT @limit_val" in query_sql
+        assert any(p.name == "limit_val" and p.value == 10 for p in params)
         assert any(p.name == "flow" and p.value == "EXPORTACION" for p in params)
 
     @patch("streamlit_app.utils.bq_client.run_query")
@@ -234,7 +235,8 @@ class TestBqViewsQueries:
         assert "d.nombre_departamento IN UNNEST(@departamentos)" in query_sql
         assert "p.sector_economico IN UNNEST(@sectores)" in query_sql
         assert "LOWER(f.codigo_nandina) LIKE @search" in query_sql
-        assert "LIMIT 100" in query_sql
+        assert "LIMIT @limit_val" in query_sql
+        assert any(p.name == "limit_val" and p.value == 100 for p in params)
 
         assert any(p.name == "start_date" and p.value == "2024-01-01" for p in params)
         assert any(p.name == "flow" and p.value == "EXPORTACION" for p in params)
@@ -251,8 +253,9 @@ class TestBqViewsQueries:
         query_sql = call_args[0][0]
         params = call_args[1]["_params"]
 
-        assert "LIMIT 50001" in query_sql
-        assert params is None
+        assert "LIMIT @limit_val" in query_sql
+        assert params is not None
+        assert any(p.name == "limit_val" and p.value == 50001 for p in params)
 
     @patch("streamlit_app.utils.bq_client.run_query")
     def test_get_benchmark_indicadores_with_filters(self, mock_run_query: MagicMock) -> None:

@@ -219,7 +219,11 @@ def get_socios_comerciales(
 
     query += " ORDER BY total_valor_usd DESC"
     if limit is not None:
-        query += f" LIMIT {limit}"
+        clean_limit = int(limit)
+        if clean_limit < 0:
+            raise ValueError("El parámetro 'limit' no puede ser negativo.")
+        query += " LIMIT @limit_val"
+        params.append(bigquery.ScalarQueryParameter("limit_val", "INT64", clean_limit))
 
     return run_query(query, _params=params)
 
@@ -319,8 +323,12 @@ def get_export_microdatos(
         query += " AND (LOWER(f.codigo_nandina) LIKE @search OR LOWER(p.descripcion_producto) LIKE @search)"
         params.append(bigquery.ScalarQueryParameter("search", "STRING", term))
 
-    query += f" ORDER BY f.fecha DESC, f.valor_fob_usd DESC LIMIT {limit}"
-    return run_query(query, _params=params if params else None)
+    clean_limit = int(limit)
+    if clean_limit < 0:
+        raise ValueError("El parámetro 'limit' no puede ser negativo.")
+    query += " ORDER BY f.fecha DESC, f.valor_fob_usd DESC LIMIT @limit_val"
+    params.append(bigquery.ScalarQueryParameter("limit_val", "INT64", clean_limit))
+    return run_query(query, _params=params)
 
 
 @st.cache_data(ttl=3600, show_spinner=False)

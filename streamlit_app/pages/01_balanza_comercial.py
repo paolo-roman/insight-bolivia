@@ -7,6 +7,7 @@ en Google BigQuery, garantizando costo cero ($0 USD) y tiempos de carga óptimos
 
 from __future__ import annotations
 
+import html
 import logging
 from datetime import date, datetime
 
@@ -193,13 +194,25 @@ def main() -> None:
     kpis = compute_balanza_kpis(df_raw)
 
     kcol1, kcol2, kcol3, kcol4 = st.columns(4)
+    # Sanitización defensiva contra XSS (FE-01)
+    safe_export_color = html.escape(str(COLOR_EXPORT))
+    safe_import_color = html.escape(str(COLOR_IMPORT))
+    safe_export_val = html.escape(format_currency_millions(kpis["total_exportaciones_usd"]))
+    safe_import_val = html.escape(format_currency_millions(kpis["total_importaciones_usd"]))
+    safe_saldo_val = html.escape(format_currency_millions(kpis["saldo_balanza_usd"]))
+    safe_cobertura = html.escape(f"{kpis['tasa_cobertura_pct']:.1f}")
+    badge_class = "badge-surplus" if kpis["es_superavit"] else "badge-deficit"
+    badge_text = "🟢 Superávit" if kpis["es_superavit"] else "🔴 Déficit"
+    saldo_color = COLOR_SURPLUS if kpis["es_superavit"] else "#EF4444"
+    safe_saldo_color = html.escape(str(saldo_color))
+
     with kcol1:
         st.markdown(
             f"""
             <div class="metric-box">
                 <div class="metric-title">Exportaciones FOB (USD)</div>
-                <div class="metric-val" style="color: {COLOR_EXPORT};">
-                    {format_currency_millions(kpis["total_exportaciones_usd"])}
+                <div class="metric-val" style="color: {safe_export_color};">
+                    {safe_export_val}
                 </div>
             </div>
             """,
@@ -211,8 +224,8 @@ def main() -> None:
             f"""
             <div class="metric-box">
                 <div class="metric-title">Importaciones CIF (USD)</div>
-                <div class="metric-val" style="color: {COLOR_IMPORT};">
-                    {format_currency_millions(kpis["total_importaciones_usd"])}
+                <div class="metric-val" style="color: {safe_import_color};">
+                    {safe_import_val}
                 </div>
             </div>
             """,
@@ -220,15 +233,12 @@ def main() -> None:
         )
 
     with kcol3:
-        badge_class = "badge-surplus" if kpis["es_superavit"] else "badge-deficit"
-        badge_text = "🟢 Superávit" if kpis["es_superavit"] else "🔴 Déficit"
-        saldo_color = COLOR_SURPLUS if kpis["es_superavit"] else "#EF4444"
         st.markdown(
             f"""
             <div class="metric-box">
                 <div class="metric-title">Saldo Comercial Acumulado</div>
-                <div class="metric-val" style="color: {saldo_color};">
-                    {format_currency_millions(kpis["saldo_balanza_usd"])}
+                <div class="metric-val" style="color: {safe_saldo_color};">
+                    {safe_saldo_val}
                 </div>
                 <div style="margin-top: 4px;"><span class="{badge_class}">{badge_text}</span></div>
             </div>
@@ -242,7 +252,7 @@ def main() -> None:
             <div class="metric-box">
                 <div class="metric-title">Tasa de Cobertura Comercial</div>
                 <div class="metric-val">
-                    {kpis["tasa_cobertura_pct"]:.1f} %
+                    {safe_cobertura} %
                 </div>
                 <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">(FOB / CIF)</div>
             </div>

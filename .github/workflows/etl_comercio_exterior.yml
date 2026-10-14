@@ -78,22 +78,28 @@ jobs:
           FIRESTORE_DATABASE: ${{ vars.FIRESTORE_DATABASE || '(default)' }}
           LOG_LEVEL: INFO
           LOG_FORMAT: json
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_OPERATION: ${{ inputs.operation }}
+          INPUT_FORCE_REPROCESS: ${{ inputs.force_reprocess }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          INPUT_DATE_RANGE: ${{ inputs.date_range }}
+          INPUT_SKIP_EXTRACT: ${{ inputs.skip_extract }}
         run: |
           ARGS=""
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ -n "${{ inputs.operation }}" ]; then
-              ARGS="$ARGS --operation ${{ inputs.operation }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ -n "$INPUT_OPERATION" ]; then
+              ARGS="$ARGS --operation $INPUT_OPERATION"
             fi
-            if [ "${{ inputs.force_reprocess }}" = "true" ]; then
+            if [ "$INPUT_FORCE_REPROCESS" = "true" ]; then
               ARGS="$ARGS --force-reprocess"
             fi
-            if [ "${{ inputs.dry_run }}" = "true" ]; then
+            if [ "$INPUT_DRY_RUN" = "true" ]; then
               ARGS="$ARGS --dry-run"
             fi
-            if [ -n "${{ inputs.date_range }}" ]; then
-              ARGS="$ARGS --date-range ${{ inputs.date_range }}"
+            if [ -n "$INPUT_DATE_RANGE" ]; then
+              ARGS="$ARGS --date-range $INPUT_DATE_RANGE"
             fi
-            if [ "${{ inputs.skip_extract }}" = "true" ]; then
+            if [ "$INPUT_SKIP_EXTRACT" = "true" ]; then
               ARGS="$ARGS --skip-extract"
             fi
           fi

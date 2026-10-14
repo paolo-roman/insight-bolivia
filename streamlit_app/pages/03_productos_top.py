@@ -7,6 +7,7 @@ en Google BigQuery, garantizando costo cero ($0 USD) y tiempos de carga óptimos
 
 from __future__ import annotations
 
+import html
 import logging
 from datetime import datetime
 
@@ -226,16 +227,35 @@ def main() -> None:
         else format_currency_millions(kpis["total_fob_usd"])
     )
 
+    # Sanitización defensiva contra XSS (FE-01)
+    top_name_short = (
+        f"{kpis['top_producto_nombre'][:28]}..."
+        if len(kpis["top_producto_nombre"]) > 28
+        else kpis["top_producto_nombre"]
+    )
+    safe_main_title = html.escape(str(main_title_str))
+    safe_val_color = html.escape(str(val_color))
+    safe_main_val = html.escape(str(main_val_str))
+    safe_sub_val = html.escape(str(sub_val_str))
+    safe_top_name_full = html.escape(str(kpis["top_producto_nombre"]))
+    safe_top_name_short = html.escape(str(top_name_short))
+    safe_top_nandina = html.escape(str(kpis["top_producto_nandina"]))
+    safe_top_prod_pct = html.escape(f"{kpis['top_producto_pct']:.1f}")
+    safe_top_sector_nombre = html.escape(str(kpis["top_sector_nombre"]))
+    safe_top_sector_pct = html.escape(f"{kpis['top_sector_pct']:.1f}")
+    safe_precio_medio = html.escape(f"${kpis['precio_medio_usd_kg']:,.2f}")
+    safe_transacciones = html.escape(f"{kpis['total_transacciones']:,}")
+
     with kcol1:
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-title">{main_title_str}</div>
-                <div class="metric-val" style="color: {val_color};">
-                    {main_val_str}
+                <div class="metric-title">{safe_main_title}</div>
+                <div class="metric-val" style="color: {safe_val_color};">
+                    {safe_main_val}
                 </div>
                 <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
-                    {sub_val_str}
+                    {safe_sub_val}
                 </div>
             </div>
             """,
@@ -243,21 +263,16 @@ def main() -> None:
         )
 
     with kcol2:
-        top_name_short = (
-            f"{kpis['top_producto_nombre'][:28]}..."
-            if len(kpis["top_producto_nombre"]) > 28
-            else kpis["top_producto_nombre"]
-        )
         st.markdown(
             f"""
             <div class="metric-box">
                 <div class="metric-title">Producto Líder (#1)</div>
-                <div class="metric-val" style="font-size: 1.2rem;" title="{kpis['top_producto_nombre']}">
-                    {top_name_short}
+                <div class="metric-val" style="font-size: 1.2rem;" title="{safe_top_name_full}">
+                    {safe_top_name_short}
                 </div>
                 <div style="margin-top: 4px;">
                     <span class="badge-nandina">
-                        NANDINA: {kpis['top_producto_nandina']} ({kpis['top_producto_pct']:.1f}%)
+                        NANDINA: {safe_top_nandina} ({safe_top_prod_pct}%)
                     </span>
                 </div>
             </div>
@@ -271,10 +286,10 @@ def main() -> None:
             <div class="metric-box">
                 <div class="metric-title">Sector Predominante</div>
                 <div class="metric-val" style="font-size: 1.25rem;">
-                    {kpis['top_sector_nombre']}
+                    {safe_top_sector_nombre}
                 </div>
                 <div style="margin-top: 4px;">
-                    <span class="badge-sector">{kpis['top_sector_pct']:.1f}% de participación</span>
+                    <span class="badge-sector">{safe_top_sector_pct}% de participación</span>
                 </div>
             </div>
             """,
@@ -287,10 +302,10 @@ def main() -> None:
             <div class="metric-box">
                 <div class="metric-title">Precio Unitario Implícito</div>
                 <div class="metric-val">
-                    ${kpis['precio_medio_usd_kg']:,.2f} <span style="font-size: 0.85rem; color: #94A3B8;">USD/kg</span>
+                    {safe_precio_medio} <span style="font-size: 0.85rem; color: #94A3B8;">USD/kg</span>
                 </div>
                 <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
-                    {kpis['total_transacciones']:,} transacciones registradas
+                    {safe_transacciones} transacciones registradas
                 </div>
             </div>
             """,

@@ -27,10 +27,16 @@ service cloud.firestore {
 
     // 1. Perfiles de Usuario (user_profiles)
     // Document ID = Firebase Auth UID
-    // Acceso exclusivo al propio usuario autenticado o a administradores
+    // BK-01: Control granular contra escalamiento de privilegios (CWE-269)
+    // - Lectura: Propietario o administrador
+    // - Creación: Propietario con rol inicial 'viewer' o administrador
+    // - Actualización: Administrador o propietario sin modificar su rol asignado
+    // - Eliminación: Exclusiva para administradores
     match /user_profiles/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId && (request.resource.data.role == 'viewer' || isAdmin());
+      allow update: if isAuthenticated() && (isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role));
+      allow delete: if isAdmin();
     }
 
     // 2. Catálogo de Data Warehouses (dwh_catalog)
@@ -43,19 +49,21 @@ service cloud.firestore {
 
     // 3. Registro de Auditoría (audit_log)
     // Document ID = Auto-generado
-    // Lectura exclusiva para admins; inserción permitida para tracking; inmutable (no update/delete)
+    // BK-02: Requiere autenticación para mitigar DoS/Cost Bomb (CWE-770)
+    // Lectura exclusiva para admins; inmutable (no update/delete)
     match /audit_log/{logId} {
       allow read: if isAdmin();
-      allow create: if true;
+      allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 
     // 4. Telemetría de Interacción UI (ui_analytics)
     // Document ID = Auto-generado
-    // Lectura exclusiva para admins; inserción pública para analítica del dashboard; inmutable
+    // BK-02: Requiere autenticación para telemetría evitando saturación (CWE-770)
+    // Lectura exclusiva para admins; inmutable (no update/delete)
     match /ui_analytics/{eventId} {
       allow read: if isAdmin();
-      allow create: if true;
+      allow create: if isAuthenticated();
       allow update, delete: if false;
     }
   }

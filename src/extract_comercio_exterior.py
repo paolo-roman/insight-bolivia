@@ -283,12 +283,19 @@ def _extract_filename_from_response(response: requests.Response, resource: Scrap
             raw_name = match.group(1).strip()
             decoded = urllib.parse.unquote(raw_name)
             if decoded:
-                return decoded
+                safe_name = Path(decoded).name.replace("\x00", "").strip()
+                if safe_name and safe_name not in (".", ".."):
+                    return safe_name
 
     # Alternativa: derivar de la URL o del título del recurso
     url_path = urllib.parse.urlparse(resource.url).path
-    candidate_name = Path(url_path).name
-    if candidate_name and "." in candidate_name and candidate_name.lower() != "download":
+    candidate_name = Path(url_path).name.replace("\x00", "").strip()
+    if (
+        candidate_name
+        and "." in candidate_name
+        and candidate_name.lower() != "download"
+        and candidate_name not in (".", "..")
+    ):
         return candidate_name
 
     # Generar a partir del título
@@ -356,8 +363,11 @@ def download_resource(
                     status="SKIPPED_EXISTING",
                 )
 
-            # Mover archivo temporal al nombre final
-            final_path = dest_dir / filename
+            # Mover archivo temporal al nombre final (defensa en profundidad contra Path Traversal)
+            resolved_dest = dest_dir.resolve()
+            final_path = (dest_dir / filename).resolve()
+            if not str(final_path).startswith(str(resolved_dest)):
+                raise ValueError(f"Ruta de destino no autorizada detectada: {final_path}")
             if final_path.exists():
                 final_path.unlink()
             temp_file_path.replace(final_path)

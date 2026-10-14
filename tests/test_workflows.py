@@ -138,6 +138,11 @@ class TestEtlComercioExteriorWorkflow:
         assert "FIRESTORE_DATABASE" in env
         assert "LOG_LEVEL" in env
         assert "LOG_FORMAT" in env
+        assert "INPUT_DATE_RANGE" in env
+        assert "INPUT_OPERATION" in env
+        assert "EVENT_NAME" in env
+        run_script = etl_step.get("run", "")
+        assert "${{ inputs." not in run_script, "Los inputs deben inyectarse mediante variables env:"
 
     def test_artifact_upload_step(self, etl_data: dict[str, Any]) -> None:
         """Valida que se guarden artefactos de diagnóstico y reportes de calidad."""

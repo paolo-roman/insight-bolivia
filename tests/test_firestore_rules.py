@@ -21,9 +21,7 @@ import pytest
 from src.firestore_models import UserRole
 
 
-# ==============================================================================
-# 1. Definición de Tipos y Modelo de Simulación de Reglas
-# ==============================================================================
+# --- 1. Definición de Tipos y Modelo de Simulación de Reglas ---
 class FirestoreOperation(StrEnum):
     """Operaciones estándar de lectura/escritura en Cloud Firestore."""
 
@@ -104,41 +102,36 @@ class FirestoreRulesEvaluator:
         document_id: str,
         operation: FirestoreOperation,
         auth: AuthContext | None = None,
+        incoming_data: dict[str, Any] | None = None,
     ) -> bool:
-        """Evalúa si una operación específica está permitida según las reglas de seguridad.
-
-        Parameters
-        ----------
-        collection:
-            Nombre de la colección ('user_profiles', 'dwh_catalog', 'audit_log', 'ui_analytics').
-        document_id:
-            ID del documento objetivo.
-        operation:
-            Operación CRUD a ejecutar.
-        auth:
-            Contexto de autenticación del llamador.
-
-        Returns
-        -------
-        bool: True si la regla autoriza el acceso, False en caso contrario.
-        """
+        """Evalúa si una operación está permitida según las reglas de seguridad actualizadas."""
         is_auth = self.is_authenticated(auth)
         is_adm = self.is_admin(auth)
 
-        # 1. Colección: user_profiles/{userId}
-        # allow read, write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+        # 1. Colección: user_profiles/{userId} (BK-01: Protección RBAC)
         if collection == "user_profiles":
             user_id = document_id
-            can_access = is_auth and auth is not None and (auth.uid == user_id or is_adm)
+            if not is_auth or auth is None:
+                return False
+            is_owner = auth.uid == user_id
             if operation.is_read:
-                return can_access
-            if operation.is_write:
-                return can_access
+                return is_owner or is_adm
+            if operation == FirestoreOperation.CREATE:
+                target_role = (incoming_data or {}).get("role", "viewer")
+                return (is_owner and target_role == "viewer") or is_adm
+            if operation == FirestoreOperation.UPDATE:
+                if is_adm:
+                    return True
+                if not is_owner:
+                    return False
+                existing_role = self.get_user_role(auth) or "viewer"
+                target_role = (incoming_data or {}).get("role", existing_role)
+                return target_role == existing_role
+            if operation == FirestoreOperation.DELETE:
+                return is_adm
             return False
 
         # 2. Colección: dwh_catalog/{catalogId}
-        # allow read: if true;
-        # allow write: if isAdmin();
         if collection == "dwh_catalog":
             if operation.is_read:
                 return True
@@ -146,39 +139,26 @@ class FirestoreRulesEvaluator:
                 return is_adm
             return False
 
-        # 3. Colección: audit_log/{logId}
-        # allow read: if isAdmin();
-        # allow create: if true;
-        # allow update, delete: if false;
+        # 3. Colección: audit_log/{logId} (BK-02: Requiere autenticación)
         if collection == "audit_log":
             if operation.is_read:
                 return is_adm
             if operation == FirestoreOperation.CREATE:
-                return True
-            if operation in (FirestoreOperation.UPDATE, FirestoreOperation.DELETE):
-                return False
+                return is_auth
             return False
 
-        # 4. Colección: ui_analytics/{eventId}
-        # allow read: if isAdmin();
-        # allow create: if true;
-        # allow update, delete: if false;
+        # 4. Colección: ui_analytics/{eventId} (BK-02: Requiere autenticación)
         if collection == "ui_analytics":
             if operation.is_read:
                 return is_adm
             if operation == FirestoreOperation.CREATE:
-                return True
-            if operation in (FirestoreOperation.UPDATE, FirestoreOperation.DELETE):
-                return False
+                return is_auth
             return False
 
-        # Cualquier otra colección no declarada está denegada por defecto
         return False
 
 
-# ==============================================================================
-# 2. Fixtures de Pruebas
-# ==============================================================================
+# --- 2. Fixtures de Pruebas ---
 @pytest.fixture
 def rules_file_path() -> Path:
     """Ruta al archivo firestore.rules del proyecto."""
@@ -204,9 +184,7 @@ def evaluator() -> FirestoreRulesEvaluator:
     return sim
 
 
-# ==============================================================================
-# 3. Pruebas de Estructura y Sintaxis del Archivo firestore.rules
-# ==============================================================================
+# --- 3. Pruebas de Estructura y Sintaxis del Archivo firestore.rules ---
 class TestFirestoreRulesFileSyntax:
     """Verifica que el archivo de reglas exista y cumpla la especificación formal v2."""
 
@@ -260,9 +238,7 @@ class TestFirestoreRulesFileSyntax:
         assert "allow read, write: if true;" not in rules_content
 
 
-# ==============================================================================
-# 4. Pruebas de Funciones Auxiliares (Helper Functions)
-# ==============================================================================
+# --- 4. Pruebas de Funciones Auxiliares (Helper Functions) ---
 class TestHelperFunctions:
     """Pruebas unitarias sobre los métodos lógicos equivalentes a los helpers de Firestore."""
 
@@ -291,9 +267,7 @@ class TestHelperFunctions:
         assert evaluator.is_admin(None) is False
 
 
-# ==============================================================================
-# 5. Pruebas RBAC por Colección: user_profiles
-# ==============================================================================
+# --- 5. Pruebas RBAC por Colección: user_profiles ---
 class TestUserProfilesCollectionRules:
     """Reglas de user_profiles: Solo el propio usuario o admin puede leer/escribir."""
 
@@ -302,11 +276,56 @@ class TestUserProfilesCollectionRules:
         for op in FirestoreOperation:
             assert evaluator.evaluate("user_profiles", "usr_viewer_01", op, auth=None) is False
 
-    def test_user_can_read_and_write_own_profile(self, evaluator: FirestoreRulesEvaluator):
-        """Un usuario regular puede leer y escribir su propio perfil."""
+    def test_user_can_read_and_update_own_profile(self, evaluator: FirestoreRulesEvaluator):
+        """Un usuario regular puede leer y actualizar su propio perfil."""
         auth = AuthContext(uid="usr_viewer_01")
-        for op in FirestoreOperation:
-            assert evaluator.evaluate("user_profiles", "usr_viewer_01", op, auth=auth) is True
+        assert evaluator.evaluate("user_profiles", "usr_viewer_01", FirestoreOperation.GET, auth=auth) is True
+        assert evaluator.evaluate("user_profiles", "usr_viewer_01", FirestoreOperation.UPDATE, auth=auth) is True
+
+    def test_privilege_escalation_blocked(self, evaluator: FirestoreRulesEvaluator):
+        """BK-01: Un usuario regular no puede auto-asignarse rol admin en create ni update."""
+        auth = AuthContext(uid="usr_viewer_01")
+        assert (
+            evaluator.evaluate(
+                "user_profiles",
+                "usr_viewer_01",
+                FirestoreOperation.CREATE,
+                auth=auth,
+                incoming_data={"role": "admin"},
+            )
+            is False
+        )
+        assert (
+            evaluator.evaluate(
+                "user_profiles",
+                "usr_viewer_01",
+                FirestoreOperation.CREATE,
+                auth=auth,
+                incoming_data={"role": "viewer"},
+            )
+            is True
+        )
+        assert (
+            evaluator.evaluate(
+                "user_profiles",
+                "usr_viewer_01",
+                FirestoreOperation.UPDATE,
+                auth=auth,
+                incoming_data={"role": "admin"},
+            )
+            is False
+        )
+        assert (
+            evaluator.evaluate(
+                "user_profiles",
+                "usr_viewer_01",
+                FirestoreOperation.UPDATE,
+                auth=auth,
+                incoming_data={"role": "viewer"},
+            )
+            is True
+        )
+        assert evaluator.evaluate("user_profiles", "usr_viewer_01", FirestoreOperation.DELETE, auth=auth) is False
 
     def test_user_cannot_read_or_write_other_profile(self, evaluator: FirestoreRulesEvaluator):
         """Un usuario regular (viewer/analyst) no puede acceder a perfiles de otros usuarios."""
@@ -327,9 +346,7 @@ class TestUserProfilesCollectionRules:
                 assert evaluator.evaluate("user_profiles", uid, op, auth=admin_auth) is True
 
 
-# ==============================================================================
-# 6. Pruebas RBAC por Colección: dwh_catalog
-# ==============================================================================
+# --- 6. Pruebas RBAC por Colección: dwh_catalog ---
 class TestDwhCatalogCollectionRules:
     """Reglas de dwh_catalog: Lectura pública general; escritura exclusiva para admin."""
 
@@ -374,38 +391,27 @@ class TestDwhCatalogCollectionRules:
             assert evaluator.evaluate("dwh_catalog", "comercio_exterior", write_op, auth=admin_auth) is True
 
 
-# ==============================================================================
-# 7. Pruebas RBAC por Colección: audit_log (Inmutabilidad y Lectura Admin)
-# ==============================================================================
+# --- 7. Pruebas RBAC por Colección: audit_log (Inmutabilidad y Lectura Admin) ---
 class TestAuditLogCollectionRules:
-    """Reglas de audit_log: Lectura exclusiva admin; inserción permitida; inmutable."""
+    """Reglas de audit_log: Lectura exclusiva admin; inserción autenticada; inmutable."""
 
     @pytest.mark.parametrize(
-        "auth",
+        "auth,expected",
         [
-            None,
-            AuthContext(uid="usr_viewer_01"),
-            AuthContext(uid="usr_analyst_01"),
-            AuthContext(uid="usr_admin_01"),
+            (None, False),
+            (AuthContext(uid="usr_viewer_01"), True),
+            (AuthContext(uid="usr_analyst_01"), True),
+            (AuthContext(uid="usr_admin_01"), True),
         ],
     )
-    def test_create_allowed_for_any_caller(
-        self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None
+    def test_create_requires_auth_mitigates_dos(
+        self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None, expected: bool
     ):
-        """Cualquier cliente o pipeline puede registrar eventos de auditoría (allow create: if true;)."""
-        assert evaluator.evaluate("audit_log", "log_auto_123", FirestoreOperation.CREATE, auth=auth) is True
+        """BK-02: Se bloquea la creación anónima y se exige autenticación para mitigar DoS/Cost Bomb."""
+        assert evaluator.evaluate("audit_log", "log_auto_123", FirestoreOperation.CREATE, auth=auth) is expected
 
-    @pytest.mark.parametrize(
-        "auth",
-        [
-            None,
-            AuthContext(uid="usr_viewer_01"),
-            AuthContext(uid="usr_analyst_01"),
-        ],
-    )
-    def test_read_denied_for_non_admins(
-        self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None
-    ):
+    @pytest.mark.parametrize("auth", [None, AuthContext(uid="usr_viewer_01"), AuthContext(uid="usr_analyst_01")])
+    def test_read_denied_for_non_admins(self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None):
         """Usuarios no administradores no pueden leer la bitácora de auditoría."""
         assert evaluator.evaluate("audit_log", "log_auto_123", FirestoreOperation.GET, auth=auth) is False
         assert evaluator.evaluate("audit_log", "log_auto_123", FirestoreOperation.LIST, auth=auth) is False
@@ -418,53 +424,37 @@ class TestAuditLogCollectionRules:
 
     @pytest.mark.parametrize(
         "auth",
-        [
-            None,
-            AuthContext(uid="usr_viewer_01"),
-            AuthContext(uid="usr_analyst_01"),
-            AuthContext(uid="usr_admin_01"),
-        ],
+        [None, AuthContext(uid="usr_viewer_01"), AuthContext(uid="usr_analyst_01"), AuthContext(uid="usr_admin_01")],
     )
     def test_update_and_delete_strictly_forbidden_immutable(
         self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None
     ):
-        """Garantía de inmutabilidad: NADIE (ni siquiera admin) puede modificar o eliminar logs de auditoría."""
+        """Garantía de inmutabilidad: NADIE puede modificar o eliminar logs de auditoría."""
         assert evaluator.evaluate("audit_log", "log_auto_123", FirestoreOperation.UPDATE, auth=auth) is False
         assert evaluator.evaluate("audit_log", "log_auto_123", FirestoreOperation.DELETE, auth=auth) is False
 
 
-# ==============================================================================
-# 8. Pruebas RBAC por Colección: ui_analytics (Inmutabilidad y Telemetría)
-# ==============================================================================
+# --- 8. Pruebas RBAC por Colección: ui_analytics (Inmutabilidad y Telemetría) ---
 class TestUiAnalyticsCollectionRules:
-    """Reglas de ui_analytics: Lectura admin; inserción pública; inmutable."""
+    """Reglas de ui_analytics: Lectura admin; inserción autenticada; inmutable."""
 
     @pytest.mark.parametrize(
-        "auth",
+        "auth,expected",
         [
-            None,
-            AuthContext(uid="usr_viewer_01"),
-            AuthContext(uid="usr_analyst_01"),
-            AuthContext(uid="usr_admin_01"),
+            (None, False),
+            (AuthContext(uid="usr_viewer_01"), True),
+            (AuthContext(uid="usr_analyst_01"), True),
+            (AuthContext(uid="usr_admin_01"), True),
         ],
     )
-    def test_create_allowed_for_telemetry_ingestion(
-        self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None
+    def test_create_requires_auth_telemetry_ingestion(
+        self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None, expected: bool
     ):
-        """Streamlit o clientes web pueden enviar eventos de telemetría sin requerir sesión autenticada."""
-        assert evaluator.evaluate("ui_analytics", "evt_auto_123", FirestoreOperation.CREATE, auth=auth) is True
+        """BK-02: Se bloquea la creación anónima en telemetría para mitigar saturación y abuso de cuota."""
+        assert evaluator.evaluate("ui_analytics", "evt_auto_123", FirestoreOperation.CREATE, auth=auth) is expected
 
-    @pytest.mark.parametrize(
-        "auth",
-        [
-            None,
-            AuthContext(uid="usr_viewer_01"),
-            AuthContext(uid="usr_analyst_01"),
-        ],
-    )
-    def test_read_denied_for_non_admins(
-        self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None
-    ):
+    @pytest.mark.parametrize("auth", [None, AuthContext(uid="usr_viewer_01"), AuthContext(uid="usr_analyst_01")])
+    def test_read_denied_for_non_admins(self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None):
         """La lectura de telemetría está protegida y es inaccesible para no administradores."""
         assert evaluator.evaluate("ui_analytics", "evt_auto_123", FirestoreOperation.GET, auth=auth) is False
         assert evaluator.evaluate("ui_analytics", "evt_auto_123", FirestoreOperation.LIST, auth=auth) is False
@@ -477,12 +467,7 @@ class TestUiAnalyticsCollectionRules:
 
     @pytest.mark.parametrize(
         "auth",
-        [
-            None,
-            AuthContext(uid="usr_viewer_01"),
-            AuthContext(uid="usr_analyst_01"),
-            AuthContext(uid="usr_admin_01"),
-        ],
+        [None, AuthContext(uid="usr_viewer_01"), AuthContext(uid="usr_analyst_01"), AuthContext(uid="usr_admin_01")],
     )
     def test_update_and_delete_strictly_forbidden_immutable(
         self, evaluator: FirestoreRulesEvaluator, auth: AuthContext | None
@@ -492,9 +477,7 @@ class TestUiAnalyticsCollectionRules:
         assert evaluator.evaluate("ui_analytics", "evt_auto_123", FirestoreOperation.DELETE, auth=auth) is False
 
 
-# ==============================================================================
-# 9. Pruebas de Seguridad Negativas y Colecciones Desconocidas
-# ==============================================================================
+# --- 9. Pruebas de Seguridad Negativas y Colecciones Desconocidas ---
 class TestDefensiveSecurityAndUnknownCollections:
     """Verifica el principio de denegación por defecto (default-deny) para rutas no mapeadas."""
 

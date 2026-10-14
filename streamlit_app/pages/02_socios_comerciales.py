@@ -7,6 +7,7 @@ en Google BigQuery, garantizando costo cero ($0 USD) y tiempos de carga óptimos
 
 from __future__ import annotations
 
+import html
 import logging
 from datetime import datetime
 
@@ -239,16 +240,29 @@ def main() -> None:
     val_color = COLOR_EXPORT if flow == "EXPORTACION" else COLOR_IMPORT
     val_title = "Total Exportaciones FOB" if flow == "EXPORTACION" else "Total Importaciones CIF"
 
+    # Sanitización defensiva contra XSS (FE-01)
+    safe_val_title = html.escape(str(val_title))
+    safe_val_color = html.escape(str(val_color))
+    safe_total_val = html.escape(format_currency_millions(kpis["total_valor_usd"]))
+    safe_peso_ton = html.escape(f"{kpis['total_peso_ton']:,.0f}")
+    safe_num_paises = html.escape(str(kpis["num_paises"]))
+    safe_transacciones = html.escape(f"{kpis['total_transacciones']:,}")
+    safe_top_pais_nombre = html.escape(str(kpis["top_pais_nombre"]))
+    safe_top_pais_pct = html.escape(f"{kpis['top_pais_pct']:.1f}")
+    safe_top_pais_iso = html.escape(str(kpis["top_pais_iso"]))
+    safe_top_bloque_nombre = html.escape(str(kpis["top_bloque_nombre"]))
+    safe_top_bloque_pct = html.escape(f"{kpis['top_bloque_pct']:.1f}")
+
     with kcol1:
         st.markdown(
             f"""
             <div class="metric-box">
-                <div class="metric-title">{val_title}</div>
-                <div class="metric-val" style="color: {val_color};">
-                    {format_currency_millions(kpis["total_valor_usd"])}
+                <div class="metric-title">{safe_val_title}</div>
+                <div class="metric-val" style="color: {safe_val_color};">
+                    {safe_total_val}
                 </div>
                 <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
-                    {kpis["total_peso_ton"]:,.0f} Toneladas
+                    {safe_peso_ton} Toneladas
                 </div>
             </div>
             """,
@@ -261,10 +275,10 @@ def main() -> None:
             <div class="metric-box">
                 <div class="metric-title">Países Socios Activos</div>
                 <div class="metric-val">
-                    {kpis["num_paises"]}
+                    {safe_num_paises}
                 </div>
                 <div style="font-size: 0.75rem; color: #94A3B8; margin-top: 4px;">
-                    {kpis["total_transacciones"]:,} transacciones
+                    {safe_transacciones} transacciones
                 </div>
             </div>
             """,
@@ -277,10 +291,10 @@ def main() -> None:
             <div class="metric-box">
                 <div class="metric-title">Socio Comercial Principal</div>
                 <div class="metric-val" style="font-size: 1.25rem;">
-                    {kpis["top_pais_nombre"]}
+                    {safe_top_pais_nombre}
                 </div>
                 <div style="margin-top: 4px;">
-                    <span class="badge-country">{kpis["top_pais_pct"]:.1f}% del total ({kpis["top_pais_iso"]})</span>
+                    <span class="badge-country">{safe_top_pais_pct}% del total ({safe_top_pais_iso})</span>
                 </div>
             </div>
             """,
@@ -293,10 +307,10 @@ def main() -> None:
             <div class="metric-box">
                 <div class="metric-title">Bloque de Integración Líder</div>
                 <div class="metric-val" style="font-size: 1.25rem;">
-                    {kpis["top_bloque_nombre"]}
+                    {safe_top_bloque_nombre}
                 </div>
                 <div style="margin-top: 4px;">
-                    <span class="badge-bloc">{kpis["top_bloque_pct"]:.1f}% cuota de mercado</span>
+                    <span class="badge-bloc">{safe_top_bloque_pct}% cuota de mercado</span>
                 </div>
             </div>
             """,
