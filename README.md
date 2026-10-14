@@ -176,19 +176,19 @@ uv run pytest tests/test_e2e_streamlit.py
 El dashboard interactivo de **InsightBolivia** está desplegado en la nube con acceso público:
 
 - **Streamlit Community Cloud:** [https://insightbolivia.streamlit.app](https://insightbolivia.streamlit.app) *(URL Oficial)*
-- **Espejo Alternativo:** [https://insight-bolivia.streamlit.app](https://insight-bolivia.streamlit.app)
-- **Hugging Face Spaces (Fallback):** [https://huggingface.co/spaces/paolo-roman/insight-bolivia](https://huggingface.co/spaces/paolo-roman/insight-bolivia)
+- **Espejo Alternativo (Streamlit Cloud):** [https://insight-bolivia.streamlit.app](https://insight-bolivia.streamlit.app)
 
 ---
 
 ### 🚀 Guía de Despliegue Paso a Paso
 
-#### 1. Despliegue en Streamlit Community Cloud
+#### 1. Despliegue en Streamlit Community Cloud (Instancia Principal)
 1. Iniciar sesión en [Streamlit Community Cloud](https://share.streamlit.io/) con la cuenta de GitHub asociada.
 2. Hacer clic en **"New app"** y seleccionar el repositorio:
    - **Repository:** `paolo-roman/insight-bolivia` (o `insightbolivia/insight-bolivia`)
    - **Branch:** `main`
    - **Main file path:** `streamlit_app/app.py`
+   - **App URL:** `insightbolivia` (genera `https://insightbolivia.streamlit.app`)
 3. En la sección **"Advanced settings" > "Secrets"**, pegar el contenido TOML de credenciales (basado en `streamlit_app/.streamlit/secrets.toml.example`):
    ```toml
    [gcp_service_account]
@@ -214,10 +214,14 @@ El dashboard interactivo de **InsightBolivia** está desplegado en la nube con a
    ```
 4. Hacer clic en **"Deploy"**.
 
-#### 2. Despliegue en Hugging Face Spaces (Alternativa)
-1. Crear un nuevo Space en [Hugging Face Spaces](https://huggingface.co/spaces) con SDK **Streamlit**.
-2. Conectar el repositorio de GitHub o sincronizar los archivos vía Git.
-3. En **Settings > Variables and secrets**, configurar los secretos en formato JSON o variables de entorno equivalentes.
+#### 2. Despliegue de Espejo de Respaldo en Streamlit Community Cloud
+Para contar con una instancia espejo de alta disponibilidad y redundancia sin costo ($0 USD):
+1. En [Streamlit Community Cloud](https://share.streamlit.io/), hacer clic nuevamente en **"New app"**.
+2. Seleccionar el mismo repositorio `paolo-roman/insight-bolivia`, rama `main` y archivo principal `streamlit_app/app.py`.
+3. En **App URL**, personalizar el subdominio a `insight-bolivia` (generando `https://insight-bolivia.streamlit.app`).
+4. Replicar los mismos secretos TOML en **"Advanced settings" > "Secrets"** y hacer clic en **"Deploy"**.
+
+> **Nota sobre infraestructura en la nube:** Plataformas como Hugging Face Spaces han restringido los entornos de ejecución con cómputo backend (Streamlit, Gradio, Docker) a planes de suscripción de pago (PRO), por lo que Streamlit Community Cloud se consolida como la solución oficial, nativa y 100% gratuita dentro de las cuotas Free Tier.
 
 ---
 
