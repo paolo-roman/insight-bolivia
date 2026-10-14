@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -271,10 +272,19 @@ def _discover_files_to_process(options: argparse.Namespace, base_dir: Path) -> l
                 files_to_process.append((meta.file_path, meta.resource.operation_type))
 
     if not files_to_process:
+        start_date, end_date = parse_date_range(getattr(options, "date_range", None))
         for op in operations:
             op_folder = base_dir / op
             if op_folder.is_dir():
                 for f in list_raw_files(op_folder):
+                    if start_date is not None or end_date is not None:
+                        match = re.search(r"(19\d\d|20\d\d)", f.name)
+                        if match:
+                            year = int(match.group(1))
+                            if start_date and year < start_date.year:
+                                continue
+                            if end_date and year > end_date.year:
+                                continue
                     files_to_process.append((f, op))
 
     return files_to_process

@@ -47,6 +47,7 @@ dependencies = [
     "streamlit>=1.37",
     "plotly>=5.22",
     "wbgapi>=1.0.14",
+    "db-dtypes>=1.7.2",
 ]
 
 [dependency-groups]

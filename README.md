@@ -164,6 +164,12 @@ uv run python -m src.main
 # Ejecutar pipeline ETL en modo simulación (dry-run)
 uv run python -m src.main --dry-run
 
+# Ejecutar pipeline ETL con filtro temporal (filtrado optimizado de archivos por gestión)
+uv run python -m src.main --date-range "2024"
+
+# Procesar un archivo específico localmente (omitiendo web scraping del INE)
+uv run python -m src.main --skip-extract --file "data/raw/comercio exterior/exportaciones/EXPORTACIONES 2024p.xlsx"
+
 # Ejecutar pipeline ETL forzando reprocesamiento con filtro de gestión
 uv run python -m src.main --force-reprocess --date-range "2024"
 

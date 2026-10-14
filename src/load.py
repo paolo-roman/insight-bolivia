@@ -149,6 +149,15 @@ def load_to_staging(
     if "fecha_ingesta" in df_to_load.columns:
         df_to_load["fecha_ingesta"] = pd.to_datetime(df_to_load["fecha_ingesta"], utc=True)
 
+    staging_str_cols = [
+        "capitulo_nandina", "seccion_nandina", "codigo_cuci", "codigo_gce",
+        "codigo_ciiu", "codigo_actividad", "codigo_cuode", "flujo_desc",
+    ]
+    for col in staging_str_cols:
+        if col in df_to_load.columns:
+            clean_col = df_to_load[col].astype(str).str.replace(r"\.0$", "", regex=True).str.strip()
+            df_to_load[col] = clean_col.where(df_to_load[col].notna(), None)
+
     job_config = bigquery.LoadJobConfig(
         write_disposition=write_disposition,
         schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION],

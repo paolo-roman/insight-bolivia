@@ -900,6 +900,22 @@ wheels = [
 ]
 
 [[package]]
+name = "db-dtypes"
+version = "1.7.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "packaging" },
+    { name = "pandas" },
+    { name = "pyarrow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/6f/c89f2a8981b01c2712868028f2a8a1e4c1d99a9154a19b493e393148da63/db_dtypes-1.7.2.tar.gz", hash = "sha256:0fb8794a29adb3d4e56c4347eecf9711ad35d847b6fb3d32e2c5a4de021f5afc", size = 36408, upload-time = "2026-10-01T18:14:06.137Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b5/51/3aec09b651917a0fe9bd968adb7888882064eddabb868cff8102e3f088c1/db_dtypes-1.7.2-py3-none-any.whl", hash = "sha256:3bf00b681afc270ae3b329b3f7e5b61fbea3f425226bb168ccfad2665ee8221b", size = 17764, upload-time = "2026-10-01T18:07:07.512Z" },
+]
+
+[[package]]
 name = "dbfread"
 version = "2.0.7"
 source = { registry = "https://pypi.org/simple" }
@@ -1489,6 +1505,7 @@ source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "charset-normalizer" },
+    { name = "db-dtypes" },
     { name = "dbfread" },
     { name = "firebase-admin" },
     { name = "google-cloud-bigquery" },
@@ -1522,6 +1539,7 @@ dev = [
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12" },
     { name = "charset-normalizer", specifier = ">=3.3" },
+    { name = "db-dtypes", specifier = ">=1.7.2" },
     { name = "dbfread", specifier = ">=2.0" },
     { name = "firebase-admin", specifier = ">=6.5" },
     { name = "google-cloud-bigquery", specifier = ">=3.25" },

@@ -418,8 +418,21 @@ def transform_to_staging(
     # 3. Formateo de NANDINA y jerarquías
     if "codigo_nandina" in df_clean.columns:
         df_clean["codigo_nandina"] = format_nandina(df_clean["codigo_nandina"])
-        if "capitulo_nandina" not in df_clean.columns:
-            df_clean["capitulo_nandina"] = df_clean["codigo_nandina"].str[:2]
+        df_clean["capitulo_nandina"] = df_clean["codigo_nandina"].str[:2]
+    elif "capitulo_nandina" in df_clean.columns:
+        clean_cap = (
+            df_clean["capitulo_nandina"]
+            .astype(str)
+            .str.replace(r"\.0$", "", regex=True)
+            .str.strip()
+            .str.zfill(2)
+        )
+        df_clean["capitulo_nandina"] = clean_cap.where(df_clean["capitulo_nandina"].notna(), None)
+
+    for c in ["seccion_nandina", "codigo_cuci", "codigo_gce", "codigo_ciiu", "codigo_actividad", "codigo_cuode"]:
+        if c in df_clean.columns:
+            clean_c = df_clean[c].astype(str).str.replace(r"\.0$", "", regex=True).str.strip()
+            df_clean[c] = clean_c.where(df_clean[c].notna(), None)
 
     # 4. Columnas temporales
     df_clean = derive_temporal_columns(df_clean)

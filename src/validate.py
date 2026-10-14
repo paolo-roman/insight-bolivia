@@ -107,7 +107,12 @@ def validate_non_negative(series: pd.Series, *, column_name: str = "valor") -> V
     )
 
 
-def validate_weight_consistency(peso_bruto: pd.Series, peso_neto: pd.Series) -> ValidationResult:
+def validate_weight_consistency(
+    peso_bruto: pd.Series,
+    peso_neto: pd.Series,
+    *,
+    max_violation_pct: float = 0.0,
+) -> ValidationResult:
     """Valida coherencia física: peso_bruto ≥ peso_neto."""
     bruto = pd.to_numeric(peso_bruto, errors="coerce")
     neto = pd.to_numeric(peso_neto, errors="coerce")
@@ -120,15 +125,16 @@ def validate_weight_consistency(peso_bruto: pd.Series, peso_neto: pd.Series) -> 
     bruto_valid = bruto[mask]
     neto_valid = neto[mask]
     violations = int((bruto_valid < neto_valid).sum())
-    passed = violations == 0
+    violation_pct = round(violations / comparable * 100, 2) if comparable > 0 else 0.0
+    passed = violation_pct <= max_violation_pct
     return ValidationResult(
         "weight_consistency",
         passed,
-        "Pesos OK (bruto ≥ neto)" if passed else f"Pesos: {violations} registros donde bruto < neto",
+        "Pesos OK (bruto ≥ neto)" if passed else f"Pesos: {violations} registros donde bruto < neto ({violation_pct}%)",
         {
             "pares_comparados": comparable,
             "violaciones": violations,
-            "porcentaje_violaciones": round(violations / comparable * 100, 2) if comparable > 0 else 0.0,
+            "porcentaje_violaciones": violation_pct,
         },
     )
 
@@ -229,7 +235,7 @@ def run_export_validations(df: pd.DataFrame) -> list[ValidationResult]:
     if "VALOR" in df.columns:
         results.append(validate_non_negative(df["VALOR"], column_name="VALOR_FOB"))
     if "KILBRU" in df.columns and "KILNET" in df.columns:
-        results.append(validate_weight_consistency(df["KILBRU"], df["KILNET"]))
+        results.append(validate_weight_consistency(df["KILBRU"], df["KILNET"], max_violation_pct=1.0))
 
     mandatory = ["GESTION", "MES", "NANDINA", "PAIS", "VALOR"]
     existing_mandatory = [c for c in mandatory if c in df.columns]
@@ -281,10 +287,10 @@ def build_comercio_exterior_suite(suite_name: str = "comercio_exterior_suite") -
     expectations.append(gxe.ExpectColumnValuesToBeBetween(column="mes", min_value=1, max_value=12))
     expectations.append(gxe.ExpectColumnValuesToBeBetween(column="trimestre", min_value=1, max_value=4))
 
-    # 4. Coherencia física: peso bruto >= peso neto
+    # 4. Coherencia física: peso bruto >= peso neto (tolerancia mostly=0.99 para anomalías INE)
     expectations.append(
         gxe.ExpectColumnPairValuesAToBeGreaterThanB(
-            column_A="peso_bruto_kg", column_B="peso_neto_kg", or_equal=True
+            column_A="peso_bruto_kg", column_B="peso_neto_kg", or_equal=True, mostly=0.99
         )
     )
 
