@@ -465,5 +465,28 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
 
+def _is_running_in_streamlit() -> bool:
+    """Detecta si el script se está ejecutando dentro del runtime de Streamlit."""
+    try:
+        import streamlit as st
+
+        return bool(hasattr(st, "runtime") and st.runtime.exists())
+    except Exception:
+        return False
+
+
+def _delegate_to_streamlit_app() -> None:
+    """Delega la ejecución al dashboard Streamlit si fue invocado por Streamlit Cloud."""
+    import runpy
+
+    app_path = Path(__file__).resolve().parent.parent / "streamlit_app" / "app.py"
+    if app_path.exists():
+        runpy.run_path(str(app_path), run_name="__main__")
+
+
+if _is_running_in_streamlit():
+    _delegate_to_streamlit_app()
+
 if __name__ == "__main__":
-    sys.exit(main())
+    if not _is_running_in_streamlit():
+        sys.exit(main())
