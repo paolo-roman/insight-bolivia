@@ -10,6 +10,7 @@ Para la carga específica de Comercio Exterior (SCD Tipo 2 en `dim_producto`,
 
 from __future__ import annotations
 
+import decimal
 import logging
 import os
 import uuid
@@ -124,6 +125,20 @@ def is_already_processed(
     return False
 
 
+def _safe_to_decimal(val: Any) -> decimal.Decimal | None:
+    """Convierte de forma segura un valor a decimal.Decimal para compatibilidad con BigQuery NUMERIC."""
+    if pd.isna(val) or val is None:
+        return None
+    s = str(val).strip()
+    if not s or s.lower() in ("nan", "none", "null"):
+        return None
+    try:
+        d = decimal.Decimal(s)
+        return d.quantize(decimal.Decimal("1e-9"), rounding=decimal.ROUND_HALF_UP)
+    except (decimal.InvalidOperation, ValueError, TypeError):
+        return None
+
+
 def load_to_staging(
     df: pd.DataFrame,
     client: bigquery.Client | None = None,
@@ -157,6 +172,14 @@ def load_to_staging(
         if col in df_to_load.columns:
             clean_col = df_to_load[col].astype(str).str.replace(r"\.0$", "", regex=True).str.strip()
             df_to_load[col] = clean_col.where(df_to_load[col].notna(), None)
+
+    staging_numeric_cols = [
+        "valor_fob_usd", "valor_cif_frontera_usd", "valor_cif_frontera_bob",
+        "valor_gravamenes_bob", "peso_bruto_kg", "peso_neto_kg", "contenido_fino",
+    ]
+    for col in staging_numeric_cols:
+        if col in df_to_load.columns:
+            df_to_load[col] = df_to_load[col].apply(_safe_to_decimal)
 
     job_config = bigquery.LoadJobConfig(
         write_disposition=write_disposition,

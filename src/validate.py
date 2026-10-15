@@ -290,7 +290,11 @@ def build_comercio_exterior_suite(suite_name: str = "comercio_exterior_suite") -
     # 4. Coherencia física: peso bruto >= peso neto (tolerancia mostly=0.99 para anomalías INE)
     expectations.append(
         gxe.ExpectColumnPairValuesAToBeGreaterThanB(
-            column_A="peso_bruto_kg", column_B="peso_neto_kg", or_equal=True, mostly=0.99
+            column_A="peso_bruto_kg",
+            column_B="peso_neto_kg",
+            or_equal=True,
+            mostly=0.99,
+            ignore_row_if="either_value_is_missing",
         )
     )
 

@@ -55,7 +55,7 @@ def sync_dim_producto_scd2(
     close_merge_sql = f"""
         MERGE {dim_ref} T
         USING (
-            SELECT DISTINCT
+            SELECT
                 codigo_nandina,
                 descripcion_nandina AS descripcion_producto,
                 SUBSTR(codigo_nandina, 1, 4) AS partida_nandina,
@@ -64,6 +64,10 @@ def sync_dim_producto_scd2(
                 COALESCE(descripcion_actividad, 'General') AS sector_economico
             FROM {stg_ref}
             WHERE hash_sha256 = @hash_val AND codigo_nandina IS NOT NULL
+            QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY codigo_nandina
+                ORDER BY fecha DESC, descripcion_nandina DESC
+            ) = 1
         ) S
         ON T.codigo_nandina = S.codigo_nandina AND T.es_vigente = TRUE
         WHEN MATCHED AND (
@@ -79,17 +83,24 @@ def sync_dim_producto_scd2(
             codigo_nandina, descripcion_producto, partida_nandina, capitulo_nandina,
             seccion_nandina, sector_economico, vigente_desde, vigente_hasta, es_vigente
         )
-        SELECT DISTINCT
+        SELECT
             S.codigo_nandina, S.descripcion_nandina, SUBSTR(S.codigo_nandina, 1, 4),
             S.capitulo_nandina, S.seccion_nandina,
             COALESCE(S.descripcion_actividad, 'General'),
             CURRENT_DATE(), CAST(NULL AS DATE), TRUE
-        FROM {stg_ref} S
+        FROM (
+            SELECT
+                codigo_nandina, descripcion_nandina, capitulo_nandina, seccion_nandina, descripcion_actividad, fecha
+            FROM {stg_ref}
+            WHERE hash_sha256 = @hash_val AND codigo_nandina IS NOT NULL
+            QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY codigo_nandina
+                ORDER BY fecha DESC, descripcion_nandina DESC
+            ) = 1
+        ) S
         LEFT JOIN {dim_ref} T
             ON S.codigo_nandina = T.codigo_nandina AND T.es_vigente = TRUE
-        WHERE S.hash_sha256 = @hash_val
-            AND S.codigo_nandina IS NOT NULL
-            AND T.codigo_nandina IS NULL;
+        WHERE T.codigo_nandina IS NULL;
     """  # noqa: S608
 
     job_config = bigquery.QueryJobConfig(
@@ -145,16 +156,21 @@ def merge_into_fact_comercio_exterior(
                 S.codigo_via AS id_via_transporte,
                 S.codigo_aduana AS id_aduana,
                 S.tipo_operacion,
-                COALESCE(S.valor_fob_usd, 0.0) AS valor_fob_usd,
-                S.valor_cif_frontera_usd AS valor_cif_usd,
-                COALESCE(S.valor_fob_usd * 6.96, 0.0) AS valor_fob_bob,
-                S.peso_neto_kg, S.peso_bruto_kg, S.contenido_fino,
+                SUM(COALESCE(S.valor_fob_usd, 0.0)) AS valor_fob_usd,
+                SUM(S.valor_cif_frontera_usd) AS valor_cif_usd,
+                SUM(COALESCE(S.valor_fob_usd * 6.96, 0.0)) AS valor_fob_bob,
+                SUM(S.peso_neto_kg) AS peso_neto_kg,
+                SUM(S.peso_bruto_kg) AS peso_bruto_kg,
+                SUM(S.contenido_fino) AS contenido_fino,
                 EXTRACT(YEAR FROM S.fecha) AS anio,
                 EXTRACT(MONTH FROM S.fecha) AS mes,
                 EXTRACT(QUARTER FROM S.fecha) AS trimestre
             FROM {stg_ref} S
             LEFT JOIN {pais_ref} P ON S.codigo_pais_ine = P.codigo_pais_ine
             WHERE S.hash_sha256 = @hash_val
+            GROUP BY
+                S.fecha, S.codigo_nandina, P.pais_iso, S.tipo_operacion,
+                S.codigo_departamento, S.codigo_via, S.codigo_aduana
         ) S
         ON T.fecha = S.fecha
             AND T.codigo_nandina = S.codigo_nandina

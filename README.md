@@ -108,6 +108,8 @@ insight-bolivia/
 ├── notebooks/                  # Jupyter notebooks (EDA)
 ├── config/
 │   └── config.yaml             # Configuración del pipeline
+├── docs/                       # Guías técnicas, informes de seguridad y troubleshooting
+│   └── GUIA_CARGAS_MANUALES_Y_TROUBLESHOOTING.md
 ├── data/
 │   └── raw/                    # Archivos fuente descargados
 ├── .env.example                # Plantilla de variables de entorno
@@ -179,6 +181,8 @@ uv run streamlit run streamlit_app/app.py
 # Ejecutar suite de pruebas End-to-End (E2E) y verificación de latencia
 uv run pytest tests/test_e2e_streamlit.py
 ```
+
+> **Guía Técnica de Operaciones:** Para instrucciones detalladas sobre backfill histórico, cargas manuales por archivo y resolución de incidencias, consulta la [Guía de Cargas Manuales y Troubleshooting](docs/GUIA_CARGAS_MANUALES_Y_TROUBLESHOOTING.md).
 
 ---
 

@@ -137,7 +137,6 @@ def create_datasets(
         if meta.table_exp_days is not None:
             ms_val = meta.table_exp_days * 86400 * 1000
             ds.default_table_expiration_ms = ms_val
-            ds.default_partition_expiration_ms = ms_val
 
         try:
             client.create_dataset(ds, exists_ok=True)
