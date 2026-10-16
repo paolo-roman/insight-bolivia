@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib
 from datetime import date
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -21,6 +22,7 @@ from streamlit_app.components.productos_charts import (
     build_top_products_bar_chart,
     build_top_products_evolution_chart,
     compute_top_productos_kpis,
+    ensure_productos_numeric,
     format_currency_millions,
     format_weight_tonnes,
 )
@@ -212,6 +214,25 @@ class TestPlotlyTopProductosChartBuilders:
         fig = build_top_products_evolution_chart(pd.DataFrame())
         assert isinstance(fig, go.Figure)
         assert len(fig.data) == 0
+
+    def test_decimal_columns_from_bigquery_do_not_raise_typeerror(
+        self, sample_top_productos_df: pd.DataFrame
+    ) -> None:
+        df_decimal = sample_top_productos_df.copy()
+        df_decimal["total_fob_usd"] = [Decimal(str(v)) for v in df_decimal["total_fob_usd"]]
+        df_decimal["total_peso_neto_kg"] = [Decimal(str(v)) for v in df_decimal["total_peso_neto_kg"]]
+
+        norm = ensure_productos_numeric(df_decimal)
+        assert pd.api.types.is_float_dtype(norm["total_fob_usd"])
+        assert pd.api.types.is_float_dtype(norm["total_peso_neto_kg"])
+
+        kpis = compute_top_productos_kpis(df_decimal, metric="usd")
+        assert kpis["total_fob_usd"] == 7_300_000_000.0
+        assert isinstance(build_top_products_bar_chart(df_decimal, metric="usd"), go.Figure)
+        assert isinstance(build_top_products_bar_chart(df_decimal, metric="volume"), go.Figure)
+        assert isinstance(build_sector_distribution_chart(df_decimal, metric="usd"), go.Figure)
+        assert isinstance(build_price_density_scatter(df_decimal), go.Figure)
+        assert isinstance(build_top_products_evolution_chart(df_decimal, metric="volume"), go.Figure)
 
 
 class TestProductosPageMain:

@@ -22,6 +22,7 @@ from streamlit_app.components.productos_charts import (
     build_top_products_bar_chart,
     build_top_products_evolution_chart,
     compute_top_productos_kpis,
+    ensure_productos_numeric,
     format_currency_millions,
     format_weight_tonnes,
 )
@@ -174,7 +175,7 @@ def main() -> None:
     # Consulta a BigQuery (Cacheada @st.cache_data)
     # --------------------------------------------------------------------------
     with st.spinner("Consultando ranking de productos en BigQuery..."):
-        df_raw = get_top_productos(year=selected_year, limit=10)
+        df_raw = ensure_productos_numeric(get_top_productos(year=selected_year, limit=10))
 
     if df_raw.empty:
         st.warning(

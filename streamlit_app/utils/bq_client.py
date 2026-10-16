@@ -14,6 +14,7 @@ import logging
 import os
 from collections.abc import Sequence
 from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,40 @@ DEFAULT_PROJECT_ID = "insight-bolivia"
 DEFAULT_DATASET = "comercio_exterior"
 DEFAULT_LOCATION = "US"
 
+_FLOAT_COLUMNS: frozenset[str] = frozenset({
+    "total_exportaciones_usd",
+    "total_importaciones_usd",
+    "saldo_balanza_usd",
+    "total_peso_neto_exportaciones_kg",
+    "total_peso_bruto_importaciones_kg",
+    "total_fob_usd",
+    "total_cif_usd",
+    "total_valor_usd",
+    "total_peso_neto_kg",
+    "total_peso_bruto_kg",
+    "valor_fob_usd",
+    "valor_cif_usd",
+    "peso_neto_kg",
+    "peso_bruto_kg",
+    "valor",
+})
+
 QueryParams = Sequence[bigquery.ScalarQueryParameter | bigquery.ArrayQueryParameter]
+
+
+def _normalize_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Convierte columnas NUMERIC de BigQuery (decimal.Decimal) a float64."""
+    if df.empty:
+        return df
+    out = df.copy()
+    for col in out.columns:
+        if col in _FLOAT_COLUMNS:
+            out[col] = pd.to_numeric(out[col], errors="coerce").astype(float)
+        elif out[col].dtype == object:
+            non_null = out[col].dropna()
+            if not non_null.empty and isinstance(non_null.iloc[0], Decimal):
+                out[col] = pd.to_numeric(out[col], errors="coerce").astype(float)
+    return out
 
 
 def _get_secret_dict(key: str) -> dict[str, Any]:
@@ -112,7 +146,7 @@ def run_query(
             job_config.query_parameters = list(_params)
 
         query_job = client.query(query, job_config=job_config)
-        return query_job.to_dataframe()
+        return _normalize_numeric_columns(query_job.to_dataframe())
     except Exception as exc:
         logger.error("Error al ejecutar consulta SQL en BigQuery: %s", exc)
         return pd.DataFrame()

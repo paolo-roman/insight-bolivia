@@ -387,14 +387,17 @@ def main() -> None:
             ]
 
         # Calcular participación sobre el total mostrado
-        total_disp = df_display["total_valor_usd"].sum() if "total_valor_usd" in df_display else 0.0
+        if "total_valor_usd" in df_display:
+            df_display["total_valor_usd"] = pd.to_numeric(df_display["total_valor_usd"], errors="coerce").fillna(0.0)
+        total_disp = float(df_display["total_valor_usd"].sum()) if "total_valor_usd" in df_display else 0.0
         if total_disp > 0:
             df_display["pct_participacion"] = (df_display["total_valor_usd"] / total_disp) * 100.0
         else:
             df_display["pct_participacion"] = 0.0
 
         if "total_peso_bruto_kg" in df_display:
-            df_display["peso_ton"] = df_display["total_peso_bruto_kg"] / 1_000.0
+            peso_kg = pd.to_numeric(df_display["total_peso_bruto_kg"], errors="coerce").fillna(0.0)
+            df_display["peso_ton"] = peso_kg / 1_000.0
 
         st.dataframe(
             df_display,

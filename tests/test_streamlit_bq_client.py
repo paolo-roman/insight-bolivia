@@ -132,6 +132,28 @@ class TestRunQuery:
         assert df.empty
         assert isinstance(df, pd.DataFrame)
 
+    @patch("streamlit_app.utils.bq_client.get_bigquery_client")
+    def test_run_query_converts_decimal_columns_to_float(self, mock_get_client: MagicMock) -> None:
+        from decimal import Decimal
+
+        mock_client = MagicMock()
+        mock_job = MagicMock()
+        raw_df = pd.DataFrame({
+            "codigo_nandina": ["7108120000"],
+            "total_fob_usd": [Decimal("1500000.50")],
+            "total_peso_neto_kg": [Decimal("2500.25")],
+            "custom_decimal": [Decimal("99.95")],
+        })
+        mock_job.to_dataframe.return_value = raw_df
+        mock_client.query.return_value = mock_job
+        mock_get_client.return_value = mock_client
+
+        df = run_query("SELECT * FROM vw_top_productos_exportados")
+        assert pd.api.types.is_float_dtype(df["total_fob_usd"])
+        assert pd.api.types.is_float_dtype(df["total_peso_neto_kg"])
+        assert pd.api.types.is_float_dtype(df["custom_decimal"])
+        assert (df["total_peso_neto_kg"] / 1000.0).iloc[0] == pytest.approx(2.50025)
+
 
 class TestBqViewsQueries:
     """Pruebas para las funciones de consulta a vistas analíticas."""

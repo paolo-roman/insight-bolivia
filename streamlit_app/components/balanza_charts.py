@@ -327,8 +327,8 @@ def build_volume_chart(df: pd.DataFrame) -> go.Figure:
         return fig
 
     x_col = df["periodo_label"] if "periodo_label" in df else df["fecha"]
-    exp_ton = df["total_peso_neto_exportaciones_kg"] / 1_000_000.0  # Miles de toneladas (kTon)
-    imp_ton = df["total_peso_bruto_importaciones_kg"] / 1_000_000.0
+    exp_ton = pd.to_numeric(df["total_peso_neto_exportaciones_kg"], errors="coerce").fillna(0.0) / 1_000_000.0
+    imp_ton = pd.to_numeric(df["total_peso_bruto_importaciones_kg"], errors="coerce").fillna(0.0) / 1_000_000.0
 
     fig.add_trace(
         go.Scatter(

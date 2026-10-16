@@ -147,9 +147,14 @@ def build_choropleth_map(
             agg_cols[c] = "first"
 
     df_map = pd.DataFrame(df.groupby("pais_iso", as_index=False).agg(agg_cols))
-    total_flow_val = df_map[val_col].sum()
+    df_map[val_col] = pd.to_numeric(df_map[val_col], errors="coerce").fillna(0.0).astype(float)
+    total_flow_val = float(df_map[val_col].sum())
     df_map["pct_share"] = (df_map[val_col] / total_flow_val * 100.0) if total_flow_val > 0 else 0.0
-    df_map["peso_ton"] = (df_map["total_peso_bruto_kg"] / 1_000.0) if "total_peso_bruto_kg" in df_map else 0.0
+    if "total_peso_bruto_kg" in df_map:
+        peso_kg = pd.to_numeric(df_map["total_peso_bruto_kg"], errors="coerce").fillna(0.0).astype(float)
+        df_map["peso_ton"] = peso_kg / 1_000.0
+    else:
+        df_map["peso_ton"] = 0.0
 
     if "num_transacciones" not in df_map:
         df_map["num_transacciones"] = 0
@@ -258,7 +263,8 @@ def build_top_partners_bar_chart(
     country_col = "nombre_pais_es" if "nombre_pais_es" in df else "pais_iso"
 
     agg = pd.DataFrame(df.groupby([country_col, "pais_iso"], as_index=False)[val_col].sum())
-    total_val = agg[val_col].sum()
+    agg[val_col] = pd.to_numeric(agg[val_col], errors="coerce").fillna(0.0).astype(float)
+    total_val = float(agg[val_col].sum())
     agg["pct"] = (agg[val_col] / total_val * 100.0) if total_val > 0 else 0.0
     agg = agg.sort_values(by=val_col, ascending=False).head(top_n).iloc[::-1]
 
@@ -416,7 +422,8 @@ def build_concentration_curve(df: pd.DataFrame) -> go.Figure:
     country_col = "nombre_pais_es" if "nombre_pais_es" in df else "pais_iso"
 
     agg = pd.DataFrame(df.groupby(country_col, as_index=False)[val_col].sum()).sort_values(by=val_col, ascending=False)
-    total_val = agg[val_col].sum()
+    agg[val_col] = pd.to_numeric(agg[val_col], errors="coerce").fillna(0.0).astype(float)
+    total_val = float(agg[val_col].sum())
 
     if total_val == 0 or len(agg) == 0:
         return fig

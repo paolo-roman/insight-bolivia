@@ -32,18 +32,32 @@ SECTOR_COLORS: dict[str, str] = {
 }
 
 
+def ensure_productos_numeric(df: pd.DataFrame) -> pd.DataFrame:
+    """Convierte columnas numéricas de productos (ej. Decimal de BigQuery) a float64/int64."""
+    if df.empty:
+        return df
+    out = df.copy()
+    for col in ("total_fob_usd", "total_peso_neto_kg"):
+        if col in out.columns:
+            out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0.0).astype(float)
+    if "num_transacciones" in out.columns:
+        out["num_transacciones"] = pd.to_numeric(out["num_transacciones"], errors="coerce").fillna(0).astype(int)
+    return out
+
+
 def format_currency_millions(val: float) -> str:
     """Formatea un valor numérico a notación de millones o billones de USD."""
-    if abs(val) >= 1_000_000_000:
-        return f"${val / 1_000_000_000:,.2f} B"
-    if abs(val) >= 1_000_000:
-        return f"${val / 1_000_000:,.2f} M"
-    return f"${val:,.2f}"
+    v = float(val)
+    if abs(v) >= 1_000_000_000:
+        return f"${v / 1_000_000_000:,.2f} B"
+    if abs(v) >= 1_000_000:
+        return f"${v / 1_000_000:,.2f} M"
+    return f"${v:,.2f}"
 
 
 def format_weight_tonnes(val_kg: float) -> str:
     """Formatea un peso en kilogramos a notación de Toneladas o Millones de Toneladas."""
-    val_ton = val_kg / 1_000.0
+    val_ton = float(val_kg) / 1_000.0
     if abs(val_ton) >= 1_000_000:
         return f"{val_ton / 1_000_000:,.2f} M Ton"
     if abs(val_ton) >= 1_000:
@@ -75,6 +89,7 @@ def compute_top_productos_kpis(
             "metric": metric,
         }
 
+    df = ensure_productos_numeric(df)
     total_fob = float(df["total_fob_usd"].sum()) if "total_fob_usd" in df else 0.0
     total_peso_kg = float(df["total_peso_neto_kg"].sum()) if "total_peso_neto_kg" in df else 0.0
     total_peso_ton = total_peso_kg / 1_000.0
@@ -147,6 +162,7 @@ def build_top_products_bar_chart(
         fig.update_layout(template="plotly_dark", height=420)
         return fig
 
+    df = ensure_productos_numeric(df)
     agg_dict = {
         c: "sum" for c in ["total_fob_usd", "total_peso_neto_kg", "num_transacciones"] if c in df
     }
@@ -233,6 +249,7 @@ def build_sector_distribution_chart(
         fig.update_layout(template="plotly_dark", height=380)
         return fig
 
+    df = ensure_productos_numeric(df)
     is_usd = metric == "usd"
     val_col = "total_fob_usd" if is_usd else "total_peso_neto_kg"
     if val_col not in df:
@@ -282,6 +299,7 @@ def build_price_density_scatter(df: pd.DataFrame) -> go.Figure:
         fig.update_layout(template="plotly_dark", height=420)
         return fig
 
+    df = ensure_productos_numeric(df)
     grp_cols = ["codigo_nandina", "descripcion_producto"]
     if "sector_economico" in df:
         grp_cols.append("sector_economico")
@@ -369,6 +387,7 @@ def build_top_products_evolution_chart(
         fig.update_layout(template="plotly_dark", height=420)
         return fig
 
+    df = ensure_productos_numeric(df)
     is_usd = metric == "usd"
     val_col = "total_fob_usd" if is_usd else "total_peso_neto_kg"
 
