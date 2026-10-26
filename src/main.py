@@ -270,6 +270,9 @@ def _discover_files_to_process(options: argparse.Namespace, base_dir: Path) -> l
         for meta in extract_summary.downloaded:
             if meta.file_path and meta.file_path.exists():
                 files_to_process.append((meta.file_path, meta.resource.operation_type))
+        if extract_summary.failed:
+            options._failed_extract_count = len(extract_summary.failed)
+            logger.error("Se registraron %d fallos de descarga del INE.", len(extract_summary.failed))
 
     if not files_to_process:
         start_date, end_date = parse_date_range(getattr(options, "date_range", None))
@@ -314,10 +317,15 @@ def run_etl_pipeline(
 
     summary = PipelineExecutionSummary(dry_run=options.dry_run, start_time=start_ts.isoformat())
     files_to_process = _discover_files_to_process(options, base_dir)
-    summary.total_files = len(files_to_process)
+    failed_downloads = getattr(options, "_failed_extract_count", 0)
+    summary.total_files = len(files_to_process) + failed_downloads
+    summary.failed_files += failed_downloads
 
     if not files_to_process:
-        logger.warning("No se encontraron archivos para procesar en el pipeline.")
+        if failed_downloads > 0:
+            logger.error("Pipeline falló: %d archivos no se pudieron descargar.", failed_downloads)
+        else:
+            logger.warning("No se encontraron archivos para procesar en el pipeline.")
         summary.end_time = datetime.now(UTC).isoformat()
         summary.duration_seconds = (datetime.now(UTC) - start_ts).total_seconds()
         return summary
@@ -486,7 +494,5 @@ def _delegate_to_streamlit_app() -> None:
 
 if _is_running_in_streamlit():
     _delegate_to_streamlit_app()
-
-if __name__ == "__main__":
-    if not _is_running_in_streamlit():
-        sys.exit(main())
+elif __name__ == "__main__":
+    sys.exit(main())

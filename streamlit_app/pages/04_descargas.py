@@ -63,12 +63,13 @@ def main() -> None:
         .page-title {
             font-size: 2.1rem;
             font-weight: 700;
-            color: #F8FAFC;
+            color: var(--text-color, inherit);
             margin-bottom: 0.2rem;
         }
         .page-subtitle {
             font-size: 1.05rem;
-            color: #94A3B8;
+            color: var(--text-color, inherit);
+            opacity: 0.8;
             margin-bottom: 1.5rem;
         }
         .metric-box {

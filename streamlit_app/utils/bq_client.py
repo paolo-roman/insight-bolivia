@@ -141,7 +141,7 @@ def run_query(
     """Ejecuta una consulta SQL en BigQuery con `@st.cache_data(ttl=3600)`."""
     try:
         client = get_bigquery_client()
-        job_config = bigquery.QueryJobConfig()
+        job_config = bigquery.QueryJobConfig(maximum_bytes_billed=250 * 1024 * 1024)
         if _params:
             job_config.query_parameters = list(_params)
 

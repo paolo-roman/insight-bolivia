@@ -25,10 +25,10 @@ SELECT
     t.trimestre,
     t.semestre,
     f.fecha,
-    SUM(CASE WHEN f.tipo_operacion = 'EXPORTACION' THEN f.valor_fob_usd ELSE 0 END) AS total_exportaciones_usd,
-    SUM(CASE WHEN f.tipo_operacion = 'IMPORTACION' THEN f.valor_cif_usd ELSE 0 END) AS total_importaciones_usd,
-    SUM(CASE WHEN f.tipo_operacion = 'EXPORTACION' THEN f.valor_fob_usd ELSE 0 END)
-    - SUM(CASE WHEN f.tipo_operacion = 'IMPORTACION' THEN f.valor_cif_usd ELSE 0 END) AS saldo_balanza_usd,
+    COALESCE(SUM(CASE WHEN f.tipo_operacion = 'EXPORTACION' THEN f.valor_fob_usd ELSE 0 END), 0) AS total_exportaciones_usd,
+    COALESCE(SUM(CASE WHEN f.tipo_operacion = 'IMPORTACION' THEN f.valor_cif_usd ELSE 0 END), 0) AS total_importaciones_usd,
+    COALESCE(SUM(CASE WHEN f.tipo_operacion = 'EXPORTACION' THEN f.valor_fob_usd ELSE 0 END), 0)
+    - COALESCE(SUM(CASE WHEN f.tipo_operacion = 'IMPORTACION' THEN f.valor_cif_usd ELSE 0 END), 0) AS saldo_balanza_usd,
     SUM(CASE WHEN f.tipo_operacion = 'EXPORTACION' THEN f.peso_neto_kg ELSE 0 END) AS total_peso_neto_exportaciones_kg,
     SUM(CASE WHEN f.tipo_operacion = 'IMPORTACION' THEN f.peso_bruto_kg ELSE 0 END) AS total_peso_bruto_importaciones_kg,
     COUNT(CASE WHEN f.tipo_operacion = 'EXPORTACION' THEN 1 END) AS num_transacciones_exportacion,

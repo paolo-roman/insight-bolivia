@@ -136,23 +136,23 @@ class TestDimensionSeeding:
 
     def test_seed_dim_pais(self, mock_bq_client: MagicMock) -> None:
         cnt = seed_dim_pais(mock_bq_client, "insight-bolivia", dry_run=False)
-        assert cnt == 80
+        assert cnt == 81
         mock_bq_client.get_table.assert_called_once()
         assert mock_bq_client.insert_rows_json.called
 
     def test_seed_dim_pais_dry_run(self, mock_bq_client: MagicMock) -> None:
         cnt = seed_dim_pais(mock_bq_client, "insight-bolivia", dry_run=True)
-        assert cnt == 80
+        assert cnt == 81
         mock_bq_client.insert_rows_json.assert_not_called()
 
     def test_seed_dim_pais_already_seeded(self, mock_bq_client: MagicMock) -> None:
         mock_row = MagicMock()
-        mock_row.cnt = 80
+        mock_row.cnt = 81
         mock_job = MagicMock()
         mock_job.result.return_value = [mock_row]
         mock_bq_client.query.return_value = mock_job
         cnt = seed_dim_pais(mock_bq_client, "insight-bolivia", dry_run=False)
-        assert cnt == 80
+        assert cnt == 81
         mock_bq_client.insert_rows_json.assert_not_called()
 
 
@@ -165,7 +165,7 @@ class TestProvisionDwh:
         assert report.is_success
         assert len(report.datasets_created) == 4
         assert len(report.tables_created) == 12
-        assert len(report.views_created) == 3
+        assert len(report.views_created) == 4
         assert "dim_tiempo" in report.dimensions_seeded
         assert "dim_pais" in report.dimensions_seeded
 
@@ -179,7 +179,7 @@ class TestProvisionDwh:
         assert report.is_success
         assert len(report.datasets_created) == 4
         assert len(report.tables_created) == 12
-        assert len(report.views_created) == 3
+        assert len(report.views_created) == 4
         assert len(report.dimensions_seeded) == 5
 
     def test_provision_dwh_dataset_failure(self, mock_bq_client: MagicMock) -> None:

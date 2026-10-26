@@ -284,6 +284,10 @@ def build_comercio_exterior_suite(suite_name: str = "comercio_exterior_suite") -
     # 3. Rangos de valores no negativos y coherencia temporal
     expectations.append(gxe.ExpectColumnValuesToBeBetween(column="valor_fob_usd", min_value=0.0))
     expectations.append(gxe.ExpectColumnValuesToBeBetween(column="valor_fob_bob", min_value=0.0))
+    expectations.append(gxe.ExpectColumnValuesToBeBetween(column="valor_cif_usd", min_value=0.0))
+    expectations.append(gxe.ExpectColumnValuesToBeBetween(column="peso_neto_kg", min_value=0.0))
+    expectations.append(gxe.ExpectColumnValuesToBeBetween(column="peso_bruto_kg", min_value=0.0))
+    expectations.append(gxe.ExpectColumnValuesToBeBetween(column="contenido_fino", min_value=0.0))
     expectations.append(gxe.ExpectColumnValuesToBeBetween(column="mes", min_value=1, max_value=12))
     expectations.append(gxe.ExpectColumnValuesToBeBetween(column="trimestre", min_value=1, max_value=4))
 

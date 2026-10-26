@@ -96,6 +96,7 @@ INE_CODE_TO_ISO3: dict[int, str] = {
     845: "URY",  # URUGUAY
     850: "VEN",  # VENEZUELA
     863: "VNM",  # VIETNAM
+    999: "ZZZ",  # PAIS NO ESPECIFICADO O EN TRANSITO
 }
 
 # ---------------------------------------------------------------------------

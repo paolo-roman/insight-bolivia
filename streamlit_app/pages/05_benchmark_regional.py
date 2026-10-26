@@ -222,11 +222,12 @@ def main() -> None:
 
         # 5. Opciones Adicionales
         show_avg = st.checkbox("Mostrar Promedio Regional", value=True)
+        peer_options = [c for c in selected_countries if c != "BOL"]
         compare_peer = st.selectbox(
             "🤝 **País de Contraste (Radar):**",
-            options=[c for c in selected_countries if c != "BOL"],
+            options=peer_options if peer_options else ["CHL"],
             format_func=lambda iso: country_display.get(iso, iso),
-            index=0 if len(selected_countries) > 1 else 0,
+            index=0,
         )
 
     # ==============================================================================
@@ -417,7 +418,7 @@ def main() -> None:
 
             st.dataframe(df_pivot, use_container_width=True)
 
-            csv_data = df_pivot.to_csv(index=False).encode("utf-8")
+            csv_data = df_pivot.to_csv(index=False).encode("utf-8-sig")
             st.download_button(
                 label="📥 Descargar Tabla Consolidada (CSV)",
                 data=csv_data,

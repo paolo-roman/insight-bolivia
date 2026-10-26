@@ -373,7 +373,7 @@ def _apply_env_overrides(raw_config: dict[str, Any]) -> dict[str, Any]:
         bq_section["project_id"] = env_val
     if env_val := os.getenv("BQ_LOCATION"):
         bq_section["location"] = env_val
-    if env_val := os.getenv("BQ_STAGING_DATASET"):
+    if env_val := os.getenv("BQ_STAGING_DATASET") or os.getenv("BQ_DATASET_STAGING"):
         bq_section["dataset_staging"] = env_val
     if env_val := os.getenv("BQ_DATASET") or os.getenv("BQ_COMERCIO_DATASET"):
         bq_section["dataset_comercio"] = env_val

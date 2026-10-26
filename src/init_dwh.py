@@ -54,8 +54,8 @@ VIEW_FILES: tuple[str, ...] = (
     "vw_balanza_comercial_mensual.sql",
     "vw_socios_comerciales.sql",
     "vw_top_productos_exportados.sql",
+    "vw_benchmark_regional.sql",
 )
-
 
 @dataclass(frozen=True)
 class DatasetMetadata:
@@ -320,16 +320,11 @@ def seed_dim_pais(client: bigquery.Client | None, project_id: str, dry_run: bool
 
     # Bloques y continentes de socios principales
     continents: dict[str, tuple[str, str, str]] = {
-        "BRA": ("América", "América del Sur", "MERCOSUR"),
-        "ARG": ("América", "América del Sur", "MERCOSUR"),
-        "PER": ("América", "América del Sur", "CAN"),
-        "COL": ("América", "América del Sur", "CAN"),
-        "CHL": ("América", "América del Sur", "ALADI"),
-        "USA": ("América", "América del Norte", "USMCA"),
-        "CHN": ("Asia", "Asia Oriental", "APEC"),
-        "JPN": ("Asia", "Asia Oriental", "APEC"),
-        "DEU": ("Europa", "Europa Occidental", "UE"),
-        "ESP": ("Europa", "Europa Occidental", "UE"),
+        "BRA": ("América", "América del Sur", "MERCOSUR"), "ARG": ("América", "América del Sur", "MERCOSUR"),
+        "PER": ("América", "América del Sur", "CAN"), "COL": ("América", "América del Sur", "CAN"),
+        "CHL": ("América", "América del Sur", "ALADI"), "USA": ("América", "América del Norte", "USMCA"),
+        "CHN": ("Asia", "Asia Oriental", "APEC"), "JPN": ("Asia", "Asia Oriental", "APEC"),
+        "DEU": ("Europa", "Europa Occidental", "UE"), "ESP": ("Europa", "Europa Occidental", "UE"),
         "BOL": ("América", "América del Sur", "CAN"),
     }
 
@@ -350,6 +345,17 @@ def seed_dim_pais(client: bigquery.Client | None, project_id: str, dry_run: bool
             "continente": cont,
             "subregion": subreg,
             "bloque_comercial": bloque,
+        })
+
+    if "ZZZ" not in seen_isos:
+        rows.append({
+            "pais_iso": "ZZZ",
+            "codigo_pais_ine": 999,
+            "nombre_pais_es": "País no especificado o en tránsito",
+            "nombre_pais_en": "Unspecified / In Transit",
+            "continente": "Otro",
+            "subregion": "Otro",
+            "bloque_comercial": "General",
         })
 
     if dry_run:

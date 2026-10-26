@@ -48,12 +48,13 @@ st.markdown(
     .main-header {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #F8FAFC;
+        color: var(--text-color, inherit);
         margin-bottom: 0.2rem;
     }
     .sub-header {
         font-size: 1.1rem;
-        color: #94A3B8;
+        color: var(--text-color, inherit);
+        opacity: 0.8;
         margin-bottom: 1.5rem;
     }
     .metric-card {
